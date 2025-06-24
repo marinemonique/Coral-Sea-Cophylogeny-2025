@@ -166,7 +166,6 @@ pal_df <- data.frame(names = names(palette), col = palette)
 
 ### Combining sequence/metadata 
 
-*Still need to put this in for Acropora*
 
 ```{r}
 # Convert to long format
@@ -431,6 +430,7 @@ all_data_acro <- rbind(seqs_long_acro, profile_data_acro)
 # 1 Library Stats
 
 ##1.1 Basic Stats
+Have not done this part yet.
 ```{r}
 # How many samples per species?
 all_data %>%
@@ -438,11 +438,10 @@ all_data %>%
   group_by(mtORF) %>% 
   summarise(total_samples = n())
 
-# Ahumilis				
-# Haplotype8a				
-# Pmeandrina				
-# Pverrucosa				
-# Unknown	
+# Acropora humulis
+# Montipora spp
+# Isopora
+#Pocillopora
 
 humil_total <- 
 hap8a_total <- 
@@ -459,7 +458,7 @@ study_total <- clean_data %>%
          name != "non-profile sequences") %>% 
   summarise(total_seqs = sum(value)) %>%
   pull(total_seqs)
-#15,336,586 total 	
+	
 
 #Total number of sequences (per species)? 
 clean_data %>%
@@ -468,10 +467,11 @@ clean_data %>%
   group_by(mtORF) %>%
   summarise(total_seqs = sum(value))
 
-# Ahumilis	6627245			
-# Haplotype8a	X		
-# Pmeandrina	X		
-# Pverrucosa	X	
+# Acropora humulis
+# Montipora spp
+# Isopora
+#Pocillopora
+
 ```
 
 
@@ -571,207 +571,27 @@ clean_data %>%
 ```{r}
 library(tidyverse)
 
-#total type profiles across Pocilloporidae 
-clean_data %>%
-  filter(coral_genus == "Pocillopora") %>% 
-  filter(str_detect(name, "p_")) %>%    #profiles start with p_
-  group_by(name) %>%
-  dplyr:: count() %>%
-  dplyr:: arrange(desc(n)) %>%
-  ungroup() %>%
-  mutate(prop = n/sum(n)) %>%
-  mutate(cumulative_sum = cumsum(prop))
+#total type profiles across Acropora
 
-# profile n_samps prop_samps cumulative_sum
-# p_C1/C42.2/C42g/C42a-C1b-C1au-C1az-C42h-C3	97	0.295731707	0.2957317	
-# p_C1d/C1/C42.2/C3-C1b-C3cg-C115k-C45c-C1au-C41p	71	0.216463415	0.5121951	
-# p_C1/C42.2/C42u-C1b-C42a-C1au-C115l-C1az-C115d	43	0.131097561	0.6432927	
-# p_C1d/C1/C42.2-C3cg-C1b-C45c-C115k-C1au	36	0.109756098	0.7530488	
-# p_C1d/C1/C1ba-C42.2-C3cg-C1b-C115k	13	0.039634146	0.7926829	
-# p_C42u/C42a/C1/C42.2/C42b-C1b-C1au	11	0.033536585	0.8262195	
-# p_C42.2/C1dh/C1/C1d-C1b-C3cg	9	0.027439024	0.8536585	
-# p_C42.2/C1/C42a/C1b-C1au-C1az-C3-C115d	6	0.018292683	0.8719512	
-# p_C1ag/C1/C1ah-C42.2-C3cg-C1b	6	0.018292683	0.8902439	
-# p_C42g/C42a/C42.2/C1-C42h-C42b-C1b-C1au	5	0.015243902	0.9054878	
-# p_C1d-C42.2-C1-C1k-C1b-C3cg	5	0.015243902	0.9207317	
-# p_C42.2/C1/C42a-C1b-C42g-C42b-C1au-C1az	5	0.015243902	0.9359756	
-# p_C1ag/C1/C42.2-C3cg-C1b-C1bi	4	0.012195122	0.9481707	
-# p_C1ag-C1-C42.2-C1bi-C3cg-C1b-C1bk	2	0.006097561	0.9542683	
-# p_C1d/C15h-C1-C42.2	2	0.006097561	0.9603659	
-# p_C42u-C1-C42.2-C42a-C1b-C1au-C115k-C115d	2	0.006097561	0.9664634	
-# p_C1ag/C1/C42.2/C1bi-C3cg-C1b-C3cw-C45c	2	0.006097561	0.9725610	
-# p_C3-C3k	1	0.003048780	0.9756098	
-# p_C42g-C42.2-C1-C1b-C42h-C42a-C42ba-C42b	1	0.003048780	0.9786585	
-# p_C42a/C1/C42.2/C1b/C1j-C1au-C3-C115l	1	0.003048780	0.9817073	
-# p_A1/A1h	1	0.003048780	0.9847561	
-# p_C15h	1	0.003048780	0.9878049	
-# p_C1ag/C1-C42.2-C3cg-C1b	1	0.003048780	0.9908537	
-# p_C1d	1	0.003048780	0.9939024	
-# p_C1ag/C1-C1m-C42.2-C1lr-C1bi-C3cg	1	0.003048780	0.9969512	
-# p_C1/C42.2/C42g/C42a-C1b-C1az-C3-C1au	1	0.003048780	1.0000000	
+#total type profiles across Isopora
 
-#total number of profiles, in order of highest abundance across P. verrucosa samples 
-clean_data %>%
-  filter(mtORF == "Pverrucosa") %>% 
-  filter(str_detect(name, "p_")) %>%    #profiles start with p_
-  group_by(name) %>%
-  dplyr:: count() %>%
-  dplyr:: arrange(desc(n)) %>%
-  ungroup() %>%
-  mutate(prop = n/sum(n)) %>%
-  mutate(cumulative_sum = cumsum(prop))
+#total type profiles across Montipora
 
-verru_pros <- 
 
-# p_C1d/C1/C42.2/C3-C1b-C3cg-C115k-C45c-C1au-C41p	71	0.461038961	0.4610390	
-# p_C1d/C1/C42.2-C3cg-C1b-C45c-C115k-C1au	36	0.233766234	0.6948052	
-# p_C1d/C1/C1ba-C42.2-C3cg-C1b-C115k	13	0.084415584	0.7792208	
-# p_C42.2/C1dh/C1/C1d-C1b-C3cg	8	0.051948052	0.8311688	
-# p_C1ag/C1/C1ah-C42.2-C3cg-C1b	6	0.038961039	0.8701299	
-# p_C1d-C42.2-C1-C1k-C1b-C3cg	5	0.032467532	0.9025974	
-# p_C1ag/C1/C42.2-C3cg-C1b-C1bi	4	0.025974026	0.9285714	
-# p_C1ag-C1-C42.2-C1bi-C3cg-C1b-C1bk	2	0.012987013	0.9415584	
-# p_C1d/C15h-C1-C42.2	2	0.012987013	0.9545455	
-# p_C1/C42.2/C42g/C42a-C1b-C1au-C1az-C42h-C3	1	0.006493506	0.9610390	
-# p_C1/C42.2/C42u-C1b-C42a-C1au-C115l-C1az-C115d	1	0.006493506	0.9675325	
-# p_C3-C3k	1	0.006493506	0.9740260	
-# p_C1ag/C1-C42.2-C3cg-C1b	1	0.006493506	0.9805195	
-# p_C1d	1	0.006493506	0.9870130	
-# p_C1ag/C1/C42.2/C1bi-C3cg-C1b-C3cw-C45c	1	0.006493506	0.9935065	
-# p_C1ag/C1-C1m-C42.2-C1lr-C1bi-C3cg	1	0.006493506	1.0000000	
 
-clean_data %>%
-  filter(mtORF == "Pmeandrina") %>% 
-  filter(str_detect(name, "p_")) %>%
-  group_by(name) %>%
-  dplyr:: count() %>%
-  dplyr:: arrange(desc(n)) %>%
-  ungroup() %>%
-  mutate(prop = n/sum(n)) %>%
-  mutate(cumulative_sum = cumsum(prop))
 
-mean_pros <- 
 
-# p_C1/C42.2/C42g/C42a-C1b-C1au-C1az-C42h-C3	74	0.548148148	0.5481481	
-# p_C1/C42.2/C42u-C1b-C42a-C1au-C115l-C1az-C115d	33	0.244444444	0.7925926	
-# p_C42u/C42a/C1/C42.2/C42b-C1b-C1au	9	0.066666667	0.8592593	
-# p_C42.2/C1/C42a/C1b-C1au-C1az-C3-C115d	5	0.037037037	0.8962963	
-# p_C42.2/C1/C42a-C1b-C42g-C42b-C1au-C1az	5	0.037037037	0.9333333	
-# p_C42g/C42a/C42.2/C1-C42h-C42b-C1b-C1au	3	0.022222222	0.9555556	
-# p_C42g-C42.2-C1-C1b-C42h-C42a-C42ba-C42b	1	0.007407407	0.9629630	
-# p_C42a/C1/C42.2/C1b/C1j-C1au-C3-C115l	1	0.007407407	0.9703704	
-# p_A1/A1h	1	0.007407407	0.9777778	
-# p_C15h	1	0.007407407	0.9851852	
-# p_C42.2/C1dh/C1/C1d-C1b-C3cg	1	0.007407407	0.9925926	
-# p_C1ag/C1/C42.2/C1bi-C3cg-C1b-C3cw-C45c	1	0.007407407	1.0000000	
-
-clean_data %>%
-  filter(mtORF == "Haplotype8a") %>% 
-  filter(str_detect(name, "p_")) %>%    #profiles start with p_
-  group_by(name) %>%
-  dplyr:: count() %>%
-  dplyr:: arrange(desc(n)) %>%
-  ungroup() %>%
-  mutate(prop = n/sum(n)) %>%
-  mutate(cumulative_sum = cumsum(prop))
-
-hap8a_pros <- 
-
-# p_C1/C42.2/C42g/C42a-C1b-C1au-C1az-C42h-C3	22	0.56410256	0.5641026	
-# p_C1/C42.2/C42u-C1b-C42a-C1au-C115l-C1az-C115d	9	0.23076923	0.7948718	
-# p_C42u/C42a/C1/C42.2/C42b-C1b-C1au	2	0.05128205	0.8461538	
-# p_C42g/C42a/C42.2/C1-C42h-C42b-C1b-C1au	2	0.05128205	0.8974359	
-# p_C42u-C1-C42.2-C42a-C1b-C1au-C115k-C115d	2	0.05128205	0.9487179	
-# p_C42.2/C1/C42a/C1b-C1au-C1az-C3-C115d	1	0.02564103	0.9743590	
-# p_C1/C42.2/C42g/C42a-C1b-C1az-C3-C1au	1	0.02564103	1.0000000	
-
-clean_data %>%
-  filter(mtORF == "Ahumilis") %>% 
-  filter(str_detect(name, "p_")) %>%    #profiles start with p_
-  group_by(name) %>%
-  dplyr:: count() %>%
-  dplyr:: arrange(desc(n)) %>%
-  ungroup() %>%
-  mutate(prop = n/sum(n)) %>%
-  mutate(cumulative_sum = cumsum(prop))
-
-humil_pros <- 
-
-# p_C3k/C3-C50a-C29-C21ab-C3b	160	0.592592593	0.5925926	
-# p_C3k/C3-C50a-C21ab-C50f-C3ba-C3dq	52	0.192592593	0.7851852	
-# p_C3k/C3-C50a-C3ba-C50f-C3dq-C21-C3a	14	0.051851852	0.8370370	
-# p_C3k/C3-C50a-C3jv-C3vx-C3vy	12	0.044444444	0.8814815	
-# p_C3bo/C3k-C3-C3bp-C50a-C29	6	0.022222222	0.9037037	
-# p_C3k/C3/C1-C50a-C21ab	4	0.014814815	0.9185185	
-# p_C3k-C3-C50a-C21ab-C3b	3	0.011111111	0.9296296	
-# p_C3k-C3-C50a-C21ab-C50f-C3ba	2	0.007407407	0.9370370	
-# p_C1/C42.2	2	0.007407407	0.9444444	
-# p_C1/C1c	2	0.007407407	0.9518519	
-# p_C1/C42.2/C42g/C42a-C1b-C1au-C1az-C42h-C3	1	0.003703704	0.9555556	
-# p_A1	1	0.003703704	0.9592593	
-# p_C3/C3k-C29-C21ab-C3b-C3gj-C21.12	1	0.003703704	0.9629630	
-# p_C3-C21-C3k-C3at-C3b-C3av-C3dp	1	0.003703704	0.9666667	
-# p_C40/C1-C3-C115	1	0.003703704	0.9703704	
-# p_C42.2/C42a/C1-C1b	1	0.003703704	0.9740741	
-# p_C1d/C1	1	0.003703704	0.9777778	
-# p_C1/C3k-C1b-C3-C42.2-C1bh-C1br	1	0.003703704	0.9814815	
-# p_C3/C21/C3av-C3at-C3b-C3dp	1	0.003703704	0.9851852	
-# p_C3k-C50a-C3cz	1	0.003703704	0.9888889	
-# p_C42a/C1-C42.2	1	0.003703704	0.9925926	
-# p_C1/C3-C1c-C1b-C1w	1	0.003703704	0.9962963	
-# p_C3k/C50a	1	0.003703704	1.0000000		
 ```
 
 ##1.6 Type profile proportions
 ```{r}
 #What is the proportion of samples that had 1 and 2 type profiles?
 
-clean_data %>% 
- filter(coral_genus == "Pocillopora") %>% 
- filter(str_detect(name, "p_")) %>%
- group_by(sample_name) %>% 
- summarise(n = n()) %>% 
- filter(n == 1)     #320  samples have 1 type profile
- #filter(n == 2)     #4 samples have 2 type profiles
-
-clean_data %>% 
-  filter(coral_genus == "Acropora") %>% 
-  filter(str_detect(name, "p_")) %>%
-  group_by(sample_name) %>% 
-  summarise(n = n()) %>% 
- #filter(n == 1)     #250 samples have 1 type profile
- filter(n == 2)     #10 samples have 2 type profiles 
 ```
 
 ##1.7 Majority Sequences 
 ```{r}
-#pverrucosa 
-clean_data %>% 
-  filter(mtORF == "Pverrucosa") %>% 
-  filter(str_detect(name, c("p_"))) %>% 
-  filter(str_detect(name, c("p_C1d")))
 
-128 / veru_total 
-#found as majority sequence in 84.2% of P. verrucosa samples 
-
-
-#p.mea/haplotype 8a 
-clean_data %>% 
- filter(mtORF == "Pmeandrina" | mtORF == "Haplotype8a") %>% 
- filter(str_detect(name, c("p_"))) %>% 
- filter(str_detect(name, c("p_C1|p_C42.2"))) 
-
-#153 /(mean_total + hap8a_total) # 0.8895349
-
-#acropora 
-clean_data %>% 
-  filter(mtORF == "Ahumilis") %>% 
-    filter(str_detect(name, c("p_"))) %>% 
-    filter(str_detect(name, c("p_C3k|p_C3"))) #%>% 
- # summarise(mean = mean(value_rel))      #for relative proportion
-
-#258 / humil_total
-#C3k/C3 is majority sequence in 0.9923077 of all samples 
 ```
 ##1.8 Depth Range
 ```{r}
@@ -806,6 +626,7 @@ meta %>% dplyr::select(c(Vial, Reef, mtORF, Lat)) %>%
 
 
 # 2 UPGMA Stats
+Need to create a combined table here to make the seq data..
 ```{r}
 #filter out non-profile sequences
 seq_data <- clean_data %>% 
@@ -833,74 +654,6 @@ seq_data %>% distinct(Reef)
 ## 2.1 Poci UPGMA Tree
 ```{r}
 
-meta_mtorf <- read.csv("Metadata_mtorf.csv")
-#read in file 
-fasta_poci <- read_fasta_df("0_SymPortal/186_20211115_03_DBV_20211116T024440.seqs.fasta") %>%
-  filter(label %in% poci_seqs$name) %>%   #only keeping DNA seqs that appear in seqs_long subset 
-  filter(!str_detect(label, "A|G")) %>%
-  deframe() %>%
-  as_dna()
-
-#creating the tree
-kdist_poci <- fasta_poci %>%
-  dna_to_DNAbin() %>%
-  kdistance(k = 7, residues = "DNA", method = "edgar") %>%
-  as.matrix()
-
-k_tree_poci <- kdist_poci %>% phangorn::upgma()
-
-seqs_wide_poci <- poci_seqs %>%
-  dplyr::select(Vial, name, value) %>%
-  filter(!str_detect(name, "A|G")) %>%
-  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
-  tibble::column_to_rownames(var = "Vial")
-
-k_unidist_poci <- GUniFrac(seqs_wide_poci, k_tree_poci)   #GUniFrac calculates all the distances 
-k_unidist_poci <- k_unidist_poci$unifracs
-
-du_poci <- k_unidist_poci[, , "d_0.5"]    # GUniFrac with alpha 0.5 
-dist_poci <- as.dist(du_poci, diag = FALSE)
-
-# Cluster the samples
-hclust_samps_poci <- upgma(du_poci)
-
-# Make the sample tree
-tree_poci <- ggtree(hclust_samps_poci, size = 0.2) +
-  theme(aspect.ratio = 0.3)
-
-# Get a sample order from ggtree
-poci_sample_order <- tree_poci$data %>% filter(isTip == "TRUE") %>%
-  arrange(y) %>%
-  pull(label)
-
-pocimat <- meta_mtorf %>% filter(Vial %in% tree_poci$data$label) %>%
-  select(Vial, RFLP = Species, mtORF) %>%
-  mutate(RFLP = case_when(RFLP == "Pmeandrina" ~ "P. meandrina",
-                          RFLP == "Pverrucosa" ~ "P. verrucosa", TRUE ~ RFLP),
-         mtORF = case_when(mtORF == "Pmeandrina" ~ "P. meandrina",
-                           mtORF == "Pverrucosa" ~ "P. verrucosa", TRUE ~ mtORF)) %>%
-  tibble::column_to_rownames(var = "Vial")
-
-poci_tree_mat <- gheatmap(tree_poci, pocimat, colnames = T, width=.1, offset = -0.26)
-poci_tree_mat <- poci_tree_mat + scale_fill_d3(palette = "category10", na.value = "grey90") + layout_dendrogram() + theme(legend.position = "left")
-
-# Start plotting the composition data
-plot_df_poci <- clean_data %>%
-  filter(coral_genus == "Pocillopora") %>%
-  mutate(Vial = fct_relevel(Vial, poci_sample_order))
-
-theme_set(theme_bw())
-
-# find the likely distinguishing seqs in here
-test_df <- pver_seqs %>%
-   group_by(name) %>%
-   summarise(mean = mean(value_rel), n = n()) %>%
-   arrange(desc(n), desc(mean))
-
-# colour them black to check
-test_pal <- all_pal
-#test_pal['p_C1ag/C1/C42.2/C1bi-C3cg-C1b-C3cw-C45c'] <- "#000000" 
-
 ```
 
 ## Fig 2A
@@ -927,151 +680,70 @@ poci_tree_mat / bar_uni_poci
 ```
 
 
-## 2.1.2 Pver distance matrix
+## 2.1.2 Acropora distance matrix
 ```{r}
-fasta_pver <- read_fasta_df("0_SymPortal/186_20211115_03_DBV_20211116T024440.seqs.fasta") %>%
-  filter(label %in% pver_seqs$name) %>%   #only keeping DNA seqs that appear in seqs_long subset 
-  filter(!str_detect(label, "A|G")) %>%
-  deframe() %>%
-  as_dna()
 
-#creating the tree
-kdist_pver <- fasta_pver %>%
-  dna_to_DNAbin() %>%
-  kdistance(k = 7, residues = "DNA", method = "edgar") %>%
-  as.matrix()
-
-k_tree_pver <- kdist_pver %>% phangorn::upgma()
-
-seqs_wide_pver <- pver_seqs %>%
-  dplyr::select(Vial, name, value) %>%
-  filter(!str_detect(name, "A|G")) %>%
-  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
-  tibble::column_to_rownames(var = "Vial")
-
-k_unidist_pver <- GUniFrac(seqs_wide_pver, k_tree_pver)   #GUniFrac calculates all the distances 
-k_unidist_pver <- k_unidist_pver$unifracs
-
-du_pver <- k_unidist_pver[, , "d_0.5"]    # GUniFrac with alpha 0.5 
-dist_pver <- as.dist(du_pver, diag = FALSE)
 ```
 
-##2.1.3 Pmea distance matrix
+##2.1.3 Isopora distance matrix
 ```{r}
-#we need individual distance matrices for each species for downstream dbRDA 
-fasta_pmh8 <- read_fasta_df("0_SymPortal/186_20211115_03_DBV_20211116T024440.seqs.fasta") %>%
-  filter(label %in% pmh8_seqs$name) %>%   #only keeping DNA seqs that appear in seqs_long subset 
-  filter(!str_detect(label, "A|G")) %>%
-  deframe() %>%
-  as_dna()
 
-#creating the tree
-kdist_pmh8 <- fasta_pmh8 %>%
-  dna_to_DNAbin() %>%
-  kdistance(k = 7, residues = "DNA", method = "edgar") %>%
-  as.matrix()
+```
 
-k_tree_pmh8 <- kdist_pmh8 %>% phangorn::upgma()
+##2.1.3 Montipora distance matrix
+```{r}
 
-seqs_wide_pmh8 <- pmh8_seqs %>%
-  dplyr::select(Vial, name, value) %>%
-  filter(!str_detect(name, "A|G")) %>%
-  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
-  tibble::column_to_rownames(var = "Vial")
-
-k_unidist_pmh8 <- GUniFrac(seqs_wide_pmh8, k_tree_pmh8)   # GUniFrac calculates all the distances 
-k_unidist_pmh8 <- k_unidist_pmh8$unifracs
-
-du_pmh8 <- k_unidist_pmh8[, , "d_0.5"]    # GUniFrac with alpha 0.5 
-dist_pmh8 <- as.dist(du_pmh8, diag = FALSE)
 ```
 
 
 #2.2 Acro UPGMA Tree
 
-**OBSERVATIONS: Regardless of the tree-type and unifrac combination, there is one major branch point in the tree. While this does not seem to be consistent with lat/lon, the unweighted approach seems very good at placing samples from the same lat/lons together.**
 
 ```{r}
 #read in file 
-fasta_acro <- read_fasta_df("0_SymPortal/186_20211115_03_DBV_20211116T024440.seqs.fasta") %>%
-  filter(label %in% acro_seqs$name) %>%   #only keeping DNA seqs that appear in seqs_long subset 
-  filter(str_sub(label, 1, 1) == "C" | str_detect(label, "_C")) %>%
-  deframe() %>%
-  as_dna()
+
 
 # Unifracs With a kmer-based tree
-kdist_acro <- fasta_acro %>%
-  dna_to_DNAbin() %>%
-  kdistance(k = 7, residues = "DNA", method = "edgar") %>%
-  as.matrix()
 
-k_tree_acro <- kdist_acro %>% phangorn::upgma()
+
 
 # Get the community matrix
-seqs_wide_acro <- acro_seqs %>%
-  dplyr::select(Vial, name, value) %>%
-  filter(str_sub(name, 1, 1) == "C" | str_detect(name, "_C")) %>%
-  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
-  tibble::column_to_rownames(var = "Vial")
+
 
 # compute unifrac distances  
-k_unidist_acro <- GUniFrac(seqs_wide_acro, k_tree_acro)   #GUniFrac calculates all the distances 
-k_unidist_acro <- k_unidist_acro$unifracs
+
 
  # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
-du_acro <- k_unidist_acro[, , "d_0.5"]   
-dist_acro <- as.dist(du_acro, diag = FALSE)
+
 
 # Cluster the samples
-hclust_samps_acro <- upgma(du_acro)
+
 
 # Make the sample tree
-tree_acro <- ggtree(hclust_samps_acro, size = 0.2) +
-  theme(aspect.ratio = 0.3) + layout_dendrogram()
+
 
 # Get a sample order from ggtree
-acro_sample_order <- tree_acro$data %>% filter(isTip == "TRUE") %>%
-  arrange(y) %>%
-  pull(label)
+
 
 # Start plotting the composition data
-plot_df_acro <- clean_data %>%
-  filter(str_detect(Species, "Ahumilis")) %>%
-  mutate(Vial = fct_relevel(Vial, acro_sample_order))
-
-theme_set(theme_bw())
 
 
 # find the likely distinguishing seqs in here
-test_df <- acro_seqs %>%
-   group_by(name) %>%
-   summarise(mean = mean(value_rel), n = n()) %>%
-   arrange(desc(n), desc(mean))
+
 
 # colour them black to check
- test_pal <- all_pal
-# test_pal['C21ab'] <- "#000000" 
+ 
 ```
 
 
 ## Fig 2B
+tree / bar
 ```{r}
-bar_uni_acro <- 
-ggplot(plot_df_acro, aes(Vial, value_rel)) +
-geom_bar(stat = "identity", aes(fill = name, colour = name)) +
-theme(aspect.ratio = 0.5, legend.position = "none", axis.text.y=element_blank(), axis.ticks.y = element_blank(),
-      axis.text.x=element_blank(), axis.ticks.x = element_blank(),
-      axis.title.x = element_blank(), axis.title.y = element_blank(),
-      panel.border = element_blank(), panel.grid.major = element_blank(),
-panel.grid.minor = element_blank(), axis.ticks = element_blank()) +
-scale_fill_manual(values = all_pal, breaks = levels(profile_data$name)) +
-scale_colour_manual(values = all_pal, breaks = levels(profile_data$name)) +
-geom_hline(yintercept = 1, size = 1) +
-guides(fill=guide_legend(ncol=2))
+
 
 #p_bar_uni is the sequences by colour. P_tree_tip is the tree coloured by reef. 
 
-tree_acro / bar_uni_acro
+
 ```
 
 
@@ -1080,17 +752,13 @@ tree_acro / bar_uni_acro
 #there is clear division of symbiont communities. we will identify which k-group and then see how non-profile sequences vary between the two groups - which seems to be the predominant feature in the split. 
 
 # Cluster the samples
-hclust_samps_acro <- upgma(du_acro)
+
 
 # Get a sample order from ggtree
-ggtree_samps_acro <- ggtree::ggtree(hclust_samps_acro)$data %>%
-  filter(isTip == "TRUE") %>%
-  arrange(y)
+
 
 # Make the sample tree
-tree_acro <- ggtree(hclust_samps_acro, size = 0.2) +
-  scale_x_reverse() +
-  theme(aspect.ratio = 4)
+
 
 ```
 
@@ -1148,166 +816,35 @@ kvalue_acro <- enframe(cu_acro) %>%
 # 3 Marker alignment psbAncr
 ```{r}
 #psba txt files forward and reverse
-#f_all <- sort(list.files(path = "psba txt files/", pattern = "Forw.txt", full.names = TRUE))
 
-#r_all <- sort(list.files(path = "psba txt files/", pattern = "Rev.txt", full.names = TRUE))
-
-
-#f_all_fasta <- f_all %>%
-  map(read_fasta_df) %>% # read in all the files
-  purrr::reduce(rbind) # reduce with rbind into one dataframe
-
-r_all_fasta <- r_all %>%
-  map(read_fasta_df) %>% # read in all the files
-  purrr::reduce(rbind) # reduce with rbind into one dataframe
 ```
 
 ## 3.1 Trimming parameters psba
 ```{r}
 # apply the trimming parameters to start and end of the sequences to improve consensus
 
-f_all_fasta_sub <- f_all_fasta %>%
-  mutate(sequence = case_when(str_detect(label, "psba1_A12") ~ str_sub(sequence, start = 30, end = 550),
-                              str_detect(label, "psba1_B02") ~ str_sub(sequence, start = 30, end = 700),
-                              str_detect(label, "psba1_B07") ~ str_sub(sequence, start = 30, end = 600),
-                              str_detect(label, "psba1_B09") ~ str_sub(sequence, start = 30, end = 650),
-                              str_detect(label, "psba1_B09") ~ str_sub(sequence, start = 30, end = 600),
-                              str_detect(label, "psba1_B10") ~ str_sub(sequence, start = 30, end = 650),
-                              str_detect(label, "psba1_C12") ~ str_sub(sequence, start = 30, end = 500),
-                              str_detect(label, "psba1_D10") ~ str_sub(sequence, start = 30, end = 500),
-                              str_detect(label, "psba1_D11") ~ str_sub(sequence, start = 30, end = 545),
-           TRUE ~ str_sub(sequence, start = 30, end = 800)))
-
-r_all_fasta_sub <- r_all_fasta %>%
-  mutate(sequence = case_when(str_detect(label, "psba1_A04") ~ str_sub(sequence, start = 30, end = 450),
-                              str_detect(label, "psba1_A06") ~ str_sub(sequence, start = 30, end = 400),
-                              str_detect(label, "psba1_A07") ~ str_sub(sequence, start = 30, end = 500),
-                              str_detect(label, "psba1_A08") ~ str_sub(sequence, start = 30, end = 450),
-                              str_detect(label, "psba1_A08") ~ str_sub(sequence, start = 30, end = 500),
-                              str_detect(label, "psba1_A09") ~ str_sub(sequence, start = 30, end = 500),
-                              str_detect(label, "psba1_A12") ~ str_sub(sequence, start = 30, end = 550),
-                              str_detect(label, "psba1_B02") ~ str_sub(sequence, start = 30, end = 300),
-                              str_detect(label, "psba1_B03") ~ str_sub(sequence, start = 30, end = 500),
-                              str_detect(label, "psba1_B06") ~ str_sub(sequence, start = 30, end = 500),
-                              str_detect(label, "psba1_B09") ~ str_sub(sequence, start = 30, end = 450),
-                              str_detect(label, "psba1_B10") ~ str_sub(sequence, start = 30, end = 450),
-                              str_detect(label, "psba1_B11") ~ str_sub(sequence, start = 30, end = 450),
-                              str_detect(label, "psba1_C04") ~ str_sub(sequence, start = 30, end = 225),
-                              str_detect(label, "psba1_D05") ~ str_sub(sequence, start = 30, end = 300),
-                              str_detect(label, "psba1_D11") ~ str_sub(sequence, start = 30, end = 425),
-                              str_detect(label, "psba1_E03") ~ str_sub(sequence, start = 30, end = 550),
-                              str_detect(label, "psba1_F02") ~ str_sub(sequence, start = 30, end = 500),
-                              str_detect(label, "psba1_F08") ~ str_sub(sequence, start = 30, end = 500),
-                              str_detect(label, "psba1_G01") ~ str_sub(sequence, start = 30, end = 300),
-                              str_detect(label, "psba1_H01") ~ str_sub(sequence, start = 30, end = 550),
-                              str_detect(label, "psba1_H02") ~ str_sub(sequence, start = 30, end = 500),
-                              str_detect(label, "psba1_H10") ~ str_sub(sequence, start = 30, end = 450),
-                              TRUE ~ str_sub(sequence, start = 30, end = 600)))
-
-# convert to format for DECIPHER and reverse complement the reverse sequence
-
-f_dss <- f_all_fasta_sub %>%
-  deframe() %>%
-  as_dna() %>%
-  dna_to_DNAStringset()
-
-r_dss <- r_all_fasta_sub %>%
-  deframe() %>%
-  as_dna() %>%
-  dna_to_DNAStringset() %>%
-  reverseComplement()
-
-pair_list <- list()
-for(i in 1:length(f_dss)){
-  ss <- DNAStringSet(c(f_dss[i], r_dss[i]))
-  pair_list[[i]] <- ss
-}
-
-# Align the sample pairs
-alignment_list <- list()
-for(i in 1:length(pair_list)){
-  alignment <- AlignSeqs(pair_list[[i]], verbose = FALSE)
-  alignment_list[[i]] <- alignment
-}
-
-# View the alignments
-aligned_df <- data.frame()
-for(i in 1:length(alignment_list)){
-  a_pair <- alignment_list[[i]] %>% writeXStringSet("temp_file.fasta")
-  a_df <- read_fasta_df("temp_file.fasta")
-  aligned_df <- rbind(aligned_df, a_df)
-}
-
-aligned_plotting <- aligned_df %>%
-  mutate(sample_id = str_sub(label, 23, 25)) %>% # create a metadata column that identifies the sample
-  mutate(label = str_sub(label, 23, 31))
-  
-# Create profile key
-key <- aligned_plotting %>%
-  tibble::rownames_to_column(var = "id")
-
-# Create long dataframe for ggplot
-long_sequences <- str_split(aligned_plotting$sequence, "") %>%
-  reshape2::melt() %>%
-  group_by(L1) %>%
-  mutate(x = row_number(),
-         L1 = as.character(L1)) %>%
-  left_join(., key, by = c("L1" = "id")) %>%
-  ungroup()
-
-# Plot alignment
-ggplot(long_sequences, aes(y = label, x = x)) +
-      geom_tile(aes(fill = value), size = 1, name = "base") +
-      facet_wrap(~ sample_id, nrow = 12, scales = "free_y") +
-      scale_fill_manual(values = palette) +
-      theme(aspect.ratio = 0.3,
-            axis.title.y = element_blank()) +
-      scale_x_continuous(expand = c(0, 0)) +
-    xlab("Position")
 ```
 
 
 ##3.2 Exclude list
 
 ```{r}
-# Sample list that we may want to exclude based on f and r alignments: B12, C04, G01, D06, D11
-exclude_list <- c("B12", "D06", "C04", "F02", "B02", "B03")
-
-align_list_final <- list()
-for(i in 1:length(alignment_list)){
-  if(str_sub(names(alignment_list[[i]][1]), 23, 25) %in% exclude_list) align_list_final[[i]] <- NULL else align_list_final[[i]] <- alignment_list[[i]]
-}
-
-align_list_final <- Filter(Negate(is.null), align_list_final)
+# Sample list that we may want to exclude based on f and r alignments: 
 ```
 
 
 ##3.3 Create the consensus sequences
 
 ```{r}
-consensus_df <- list()
-for(i in 1:length(align_list_final)){
-  a_con <- align_list_final[[i]] %>% ConsensusSequence()
-  names(a_con) <- names(align_list_final[[i]])[1]
-  consensus_df[[i]] <- a_con
-}
+
 ```
 
 ##3.4 Pocillopora psba
 ```{r}
-pocillo_meta <- meta %>%
-  filter(mtORF == "Pmeandrina" | mtORF == "Pverrucosa" | mtORF == "Haplotype8a") %>%
-  filter(str_detect(psba_ID, "psb"))
 
-pocillo_names <- pocillo_meta %>% pull(psba_ID)
-
-pocillo_cons <- list()
-for(i in 1:length(consensus_df)){
-  if(str_sub(names(consensus_df[[i]]), 17, 25) %in% pocillo_names) pocillo_cons[[i]] <- consensus_df[[i]] else pocillo_cons[[i]] <- NULL
-}
 
 # Keep only the pocillo psba sequences
-pocillo_cons <- Filter(Negate(is.null), pocillo_cons)
+
 ```
 
 
@@ -1393,52 +930,26 @@ p_ip
 
 ##3.5 Acropora psba
 ```{r}
-acro_meta <- meta %>%
-  filter(mtORF == "Ahumilis") %>%
-  filter(str_detect(psba_ID, "psb"))
 
-acro_names <- acro_meta %>% pull(psba_ID)
-
-acro_cons <- list()
-for(i in 1:length(consensus_df)){
-  if(str_sub(names(consensus_df[[i]]), 17, 25) %in% acro_names) acro_cons[[i]] <- consensus_df[[i]] else acro_cons[[i]] <- NULL
-}
-
-# Keep only the pocillo psba sequences
-acro_cons <- Filter(Negate(is.null), acro_cons)
 ```
 
 ###3.5.2 Acro: ITS2/psbA distance matrices
 
 ```{r}
 # Get consensus seqs
-acro_df <- data.frame()
-for(i in 1:length(acro_cons)){
-  acro_cons[[i]] %>% writeXStringSet("temp_file.fasta")
-  t_df <- read_fasta_df("temp_file.fasta")
-  acro_df <- rbind(acro_df, t_df)
-}
+
 
 # Kmer based distance matrix
-dis_psbaID <- acro_df %>%
-  mutate(psba_ID = str_sub(label, 17, 25)) %>%
-  left_join(., acro_meta) %>%
-  select(Vial, sequence) %>%
-  deframe() %>%
-  DNAStringSet() %>%
-  DNAStringSet_to_DNAbin() %>%
-  kmer::kdistance(k = 7) %>%
-  as.matrix()
+
 
 # Produce hierarchical tree
-psba_upgma_tree <- phangorn::upgma(dis_psbaID)
+
 
 # Subset the full matrix
-du_acro_sub <- dist_subset(du_acro, psba_upgma_tree$tip.label) %>%
-  as.matrix()
+
 
 # Produce hierarchical tree
-ITS2_upgma_tree <- phangorn::upgma(du_acro_sub)
+
 ```
 
 ###3.5.3 Acropora ITS2 Tanglegram
