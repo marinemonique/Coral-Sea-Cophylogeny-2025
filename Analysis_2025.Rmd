@@ -1727,52 +1727,12 @@ k_map <- rbind(poci_k, acro_k)
 
 ## 6.1 P. meandrina Procrustes 
 ```{r}
-#here is the subset with the data that matches the host dartseq data
-seqs_wide_pmh8_subset.b <- pmh8_seqs.b %>% 
-  filter(Vial %in% c("P ver 001", "P ver 010", "P ver 055", "P ver 091", "P ver 246", "P ver 255", "P ver 233", "P ver 002", "P ver 011", "P ver 056", "P ver 092", "P ver 247", "P ver 167", "P ver 234", "P ver 013", "P ver 043", "P ver 057", "P ver 095", "P ver 248", "P ver 168","P ver 004", "P ver 014", "P ver 347", "P ver 059", "P ver 097", "P ver 249", "P ver 169","P ver 005", "P ver 029", "P ver 358","P ver 284", "P ver 251", "P ver 170", "P ver 031", "P ver 361", "P ver 061", "P ver 286", "P ver 252", "P ver 171", "P ver 008","P ver 035", "P ver 367", "P ver 082", "P ver 290", "P ver 037", "P ver 084", "P ver 245", "P ver 232", "P ver 015", "P ver 066","P ver 112", "P ver 266", "P ver 174", "P ver 373", "P ver 271", "P ver 179", "P ver 376", "P ver 304", "P ver 182", "P ver 381", "P ver 275", "P ver 382", "P ver 104", "P ver 237", "P ver 277", "P ver 023", "P ver 239", "P ver 065"))
 
-#now must filter fasta files to correspond to samples in seqs_long subset 
-fasta_pmh8.b <- read_fasta_df("0_SymPortal/186_20211115_03_DBV_20211116T024440.seqs.fasta") %>%
-  filter(label %in% seqs_wide_pmh8_subset.b$name) %>%   
-  deframe() %>%
-  as_dna()
-
-#creating the subset symbiont tree
-kdist_pmh8.b <- fasta_pmh8.b %>%
-  dna_to_DNAbin() %>%
-  kdistance(k = 7, residues = "DNA", method = "edgar") 
-
-#as a distance matrix
-kdist_pmh8.b <- as.matrix(kdist_pmh8.b)
-
-#creating the tree
-k_tree_pmh8.b <- kdist_pmh8.b %>% phangorn::upgma()
-
-#subsetting the metadata
-seqs_wide_pmh8.b <- poci_seqs.b[poci_seqs.b$Vial %in% seqs_wide_pmh8_subset.b$Vial,] %>% 
-  dplyr::select(Vial, name, value) %>%
-  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
-  tibble::column_to_rownames(var = "Vial")
-
-#creating unifrac distance matrix and tree 
-k_unidist_pmh8.b <- GUniFrac(seqs_wide_pmh8.b, k_tree_pmh8.b)   #GUniFrac calculates all the distances 
-k_unidist_pmh8.b <- k_unidist_pmh8.b$unifracs
-
-#GUniFrac with alpha 0.5
-du_pmh8.b <- k_unidist_pmh8.b[, , "d_0.5"]    # GUniFrac with alpha 0.5 
-dist_pmh8.b <- as.dist(du_pmh8.b, diag = FALSE)
 ```
 
-### 6.1.1 P.meandrina Dartseq Tree
+### 6.1.1 P.meandrina  Tree
 ```{r}
-#load("HostAdmix/gl3.csmp.pmea.RData")
 
-#library(adegenet)
-
-# calculate a distance matrix
-#dist_matrix2 <- gl.dist.ind(gl3.csmp.pmea, method = "euclidean", scale = TRUE)
-# convert the distance matrix to a dist object
-#dart.pmea.tree <- as.dist(dist_matrix2)
 
 ```
 
@@ -1826,53 +1786,23 @@ dim(H.dist)
 ```{r, include = FALSE}
 # Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont. 
 
-paco.pmea <- procrustes(H.dist, P.dist, symmetric = FALSE)
-summary(paco.pmea)
-
-#symmetric = FALSE: This specifies that the Procrustes rotation can be non-orthogonal (i.e. generalised), meaning that it can include scaling and shearing transformations in addition to rotation and reflection. This allows for more flexible alignment between the two dissimilarity matrices, but may result in a less interpretable or meaningful alignment depending on the nature of the data.
-
-
-#statistics check for residuals 
-#paco error chart 
-plot(paco.pmea, kind = 1, type = "text")
-
-#show paco residuals. higher numbers mean these are the samples that have high dissimilarity between the symbiont and host trees
-plot(paco.pmea, kind = 2, type = "text")
 ```
 
 
 ###6.1.4 P. mea procrustes plot
 ```{r}
 #transfer PC coords into dataframe for plotting  
-hp.df.pmea <- data.frame(rda1=paco.pmea$Yrot[,1],
-rda2=paco.pmea$Yrot[,2],xrda1=paco.pmea$X[,1],
-xrda2=paco.pmea$X[,2]) %>% 
-  tibble::rownames_to_column(var = "Vial") %>% 
-  filter(Vial != c("P ver 001", "P ver 010"))
-#pver 001, pver010 need to be removed bc outliers 
+
 
 
 #filter metadata to just reef
-meta.reef <- meta %>% 
-  dplyr::select(Vial, Reef)
+
 
 #left join the metadata to get reef into the dataframe 
-hp.df.pmea2 <- hp.df.pmea %>% left_join(meta.reef) %>% 
-  mutate(Reef = factor(Reef, levels = c("Bougainville", "Moore", "Willis", "Holmes", "Chilcott", "Marion", "Frederick", "Saumarez", "Wreck"))) 
+
 
 #create plot 
-procrust.pmea <- ggplot(hp.df.pmea2) +
-  geom_segment(aes(x=rda1,y=rda2,xend=xrda1,yend=xrda2), size = .2) +
-  geom_point(aes(x=rda1, y=rda2, shape = "Host", color = Reef)) +
-  geom_point(aes(x=xrda1, y=xrda2, shape = "Symbiont", color = Reef)) +
-  scale_shape_manual(name = "Groups", 
-                     values = c("Host" = 19, "Symbiont" = 17)) +
-  scale_colour_manual(values = reef_pal2) +
-    theme(legend.position = "none") +
-  theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank()) +
-  theme(aspect.ratio = 1) 
+
 
 ```
 
@@ -1887,47 +1817,34 @@ protest(X = H.dist, Y = P.dist, scores = "sites", permutations = 999)
 
 # 6.2 P. verrucosa Procrustes 
 ```{r}
-load("HostAdmix/list.pver.RData")
-#here is the subset with the data that matches the host dartseq data
-seqs_wide_pver_subset.b <- pver_seqs.b %>% 
-  filter(Vial %in% c(list.pver))
 
 
 #now must filter fasta files to correspond to samples in seqs_long subset 
-fasta_pver.b <- read_fasta_df("0_SymPortal/186_20211115_03_DBV_20211116T024440.seqs.fasta") %>%
-  filter(label %in% seqs_wide_pver_subset.b$name) %>%   
-  deframe() %>%
-  as_dna()
+
 
 
 #creating the subset symbiont tree
-kdist_pver.b <- fasta_pver.b %>%
-  dna_to_DNAbin() %>%
-  kdistance(k = 7, residues = "DNA", method = "edgar") 
+
 
 #as a distance matrix
-kdist_pver.b <- as.matrix(kdist_pver.b)
+
 
 #creating the tree
-k_tree_pver.b <- kdist_pver.b %>% phangorn::upgma()
+
 
 #subsetting the metadata
-seqs_wide_pver.b <- poci_seqs.b[poci_seqs.b$Vial %in% seqs_wide_pver_subset.b$Vial,] %>% 
-  dplyr::select(Vial, name, value) %>%
-  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
-  tibble::column_to_rownames(var = "Vial")
+
 
 #creating unifrac distance matrix and tree 
-k_unidist_pver.b <- GUniFrac(seqs_wide_pver.b, k_tree_pver.b)   #GUniFrac calculates all the distances 
-k_unidist_pver.b <- k_unidist_pver.b$unifracs
+  #GUniFrac calculates all the distances 
+
 
 #GUniFrac with alpha 0.5
-du_pver.b <- k_unidist_pver.b[, , "d_0.5"]    # GUniFrac with alpha 0.5 
-dist_pver.b <- as.dist(du_pver.b, diag = FALSE)
+
 ```
 
 
-### 6.2.1 P.verrucosa Dartseq Tree
+### 6.2.1 P.verrucosa  Tree
 ```{r}
 load("HostAdmix/gl3.csmp.pver.RData")
 
@@ -1991,48 +1908,15 @@ dim(H.dist.pver)
 ```{r, include = FALSE}
 # Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont 
 
-paco.pver <- procrustes(H.dist.pver, P.dist.pver, symmetric = FALSE)
-summary(paco.pver)
-#sum of squares here is ridiculous (over 1 million)
 
-#symmetric = FALSE: This specifies that the Procrustes rotation can be non-orthogonal (i.e. generalised), meaning that it can include scaling and shearing transformations in addition to rotation and reflection. This allows for more flexible alignment between the two dissimilarity matrices, but may result in a less interpretable or meaningful alignment depending on the nature of the data.
-
-#Check residuals of paco 
-#paco error chart 
-plot(paco.pver, kind = 1, type = "text")
-
-#show paco residuals. higher numbers mean these are the samples that have high dissimilarity between the symbiont and host trees
-plot(paco.pver, kind = 2, type = "text")
 ```
 
 
 ###6.2.4 P. verrucosa procrustes plot
 ```{r}
-hp.df.pver <- data.frame(rda1=paco.pver$Yrot[,1],
-rda2=paco.pver$Yrot[,2],xrda1=paco.pver$X[,1],
-xrda2=paco.pver$X[,2]) %>% 
-  tibble::rownames_to_column(var = "Vial") %>% 
-  filter(!Vial %in% c("P ver 033", "P ver 030"))
 
-#left join the metadata to get reef into the dataframe 
-hp.df.pver2 <- hp.df.pver %>% left_join(meta.reef) %>% 
-  mutate(Reef = factor(Reef, levels = c("Osprey","Bougainville", "Moore", "Willis", "Holmes", "Herald", "Lihou", "Flinders", "Marion", "Wreck"))) %>% 
-  left_join(qlong.admix.pver)
 
-procrust.pver <- ggplot(hp.df.pver2) +
-  geom_segment(aes(x=rda1,y=rda2,xend=xrda1,yend=xrda2), size = .2) +
-  geom_point(aes(x=rda1, y=rda2, shape = "Host", color = Reef)) +
-  geom_point(aes(x=xrda1, y=xrda2, shape = "Symbiont", color = Reef)) +
-  scale_shape_manual(name = "Groups", 
-                     values = c("Host" = 19, "Symbiont" = 17)) +
-  scale_colour_manual(values = reef_pal2) +
-    theme(legend.position = "none") +
-  theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank()) +
-  theme(aspect.ratio = 1)
 
-#pver 033, pver 030 need to be removed - failed residual check above 
 ```
 
 
@@ -2183,102 +2067,14 @@ plot(paco.acro, kind = 2, type = "text")
 
 ### 6.3.4 Acropora procrustes plot
 ```{r}
-load("HostAdmix/qlong.acro.RData") #dataframe with host clusters for A. humilis 
-
-hp.df.acro <- data.frame(rda1=paco.acro$Yrot[,1],
-rda2=paco.acro$Yrot[,2],xrda1=paco.acro$X[,1],
-xrda2=paco.acro$X[,2]) %>% 
-  tibble::rownames_to_column(var = "Vial") %>% 
- filter(!Vial %in% c("A ten 194", "A ten 018"))  
-  
-#new_rows <- data.frame(Reef = c("Willis", "Saumarez"), 
-                    #   Vial = NA,
-                    #   rda1 = NA, rda2 = NA, 
-                    #   xrda1 = NA, xrda2 = NA)
-
-#left join the metadata to get reef into the dataframe 
-hp.df.acro2 <- hp.df.acro %>% left_join(meta.reef) %>% 
-  mutate(Reef = factor(Reef, levels = c("Osprey", "Bougainville", "Moore", "Willis", "Holmes", "Chilcott", "Herald","Lihou", "Flinders", "Marion", "Frederick", "Saumarez", "Wreck"))) %>% 
-  left_join(qlong.acro) %>% 
-  mutate(Cluster = as.factor(variable)) %>% 
-  filter(!is.na(Cluster))
-
-
-acro_k2 <- acro_k %>% select(Vial, k_id)
-hp.df.acro3 <- hp.df.acro2 %>% 
-  left_join(acro_k) %>% 
-  mutate(k_id = as.factor(k_id)) %>% 
-  filter(!is.na(k_id))
-
-save(acro_k2, file = "acro_k2.RData")
-
-#hp.df.acro2 <- rbind(hp.df.acro2, new_rows)
-
-procrust.acro <- ggplot(hp.df.acro2) +
-  geom_segment(aes(x=rda1,y=rda2,xend=xrda1,yend=xrda2), size = .2) +
-  geom_point(aes(x=rda1, y=rda2, shape = "Symbiont", color = Reef)) +
-  geom_point(aes(x=xrda1, y=xrda2, shape = "Host", color = Reef)) +
-  scale_shape_manual(name = "Groups", 
-                     values = c("Host" = 17, "Symbiont" = 19)) +
-  scale_colour_manual(values = reef_pal2, drop = FALSE) +
-      theme(legend.position = "right") +
- theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-   panel.grid.major = element_blank()) +
-  theme(aspect.ratio = 1) 
-
-
-procrust.acro.clust <- ggplot(hp.df.acro2) +
-  geom_segment(aes(x=rda1,y=rda2,xend=xrda1,yend=xrda2), size = .2) +
-    geom_point(aes(x=rda1, y=rda2, shape = "Symbiont", color = Cluster)) +
-    geom_point(aes(x=xrda1, y=xrda2, shape = "Host", color = Cluster)) +
-  scale_shape_manual(name = "Groups", 
-                     values = c("Host" = 17, "Symbiont" = 19)) +
-  scale_colour_manual(values = clust_pal, drop = FALSE) +
-      theme(legend.position = "right") +
- theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-   panel.grid.major = element_blank()) +
-  theme(aspect.ratio = 1) 
-
-procrust.acro.clust
-
-
-procrust.acro.kid <- ggplot(hp.df.acro3) +
-  geom_segment(aes(x=rda1,y=rda2,xend=xrda1,yend=xrda2), size = .2) +
-  geom_point(aes(x=rda1, y=rda2, shape = "Symbiont", color = k_id)) +
-  geom_point(aes(x=xrda1, y=xrda2, shape = "Host", color = k_id)) +
-  scale_shape_manual(name = "Groups", 
-                     values = c("Host" = 17, "Symbiont" = 19)) +
-  scale_colour_manual(values = kid_pal, drop = FALSE) +
-      theme(legend.position = "right") +
- theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-   panel.grid.major = element_blank()) +
-  theme(aspect.ratio = 1) 
-
-procrust.acro.kid
 
 ```
-**There is clearly host genetic structure, but the symbionts that are highly structured are from AH1 and AH2 host genetic clusters, which are found in the top of the plot. Symbionts from AH3 are more closely related to the host genetic structure** 
 
 
 
 ```{r}
 ##sub-panel to include only symbionts of the Acropora Procrustes to better see (not overlaid with host points or segments)
 
-procrust.acro.sym <- ggplot(hp.df.acro2) +
-  #geom_segment(aes(x=rda1,y=rda2,xend=xrda1,yend=xrda2), size = .2) +
-  geom_point(aes(x=rda1, y=rda2, shape = "Symbiont", color = Reef)) +
-  #geom_point(aes(x=xrda1, y=xrda2, shape = "Host", color = Reef)) +
-  scale_shape_manual(name = "Groups", 
-                     values = c("Host" = 17, "Symbiont" = 19)) +
-  scale_colour_manual(values = reef_pal2, drop = FALSE) +
-      theme(legend.position = "right") +
- theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-   panel.grid.major = element_blank()) +
-  theme(aspect.ratio = 1) 
 ```
 
 
@@ -2294,161 +2090,6 @@ protest(X = H.dist.acro, Y = P.dist.acro, scores = "sites", permutations = 999)
 ```
 
 
-# 6.4 Acropora AHCL1 only procrustes
-```{r}
-load("HostAdmix/list.acroC3.RData")
-#here is the subset with the data that matches the host dartseq data
-seqs_wide_acroC3_subset.b <- acro_seqs.b %>% 
-  filter(Vial %in% c(list.acroC3))
-
-
-#now must filter fasta files to correspond to samples in seqs_long subset 
-fasta_acroC3.b <- read_fasta_df("0_SymPortal/186_20211115_03_DBV_20211116T024440.seqs.fasta") %>%
-  filter(label %in% seqs_wide_acroC3_subset.b$name) %>%   
-  deframe() %>%
-  as_dna()
-
-#creating the subset symbiont tree
-kdist_acroC3.b <- fasta_acroC3.b %>%
-  dna_to_DNAbin() %>%
-  kdistance(k = 7, residues = "DNA", method = "edgar") 
-
-#as a distance matrix
-kdist_acroC3.b <- as.matrix(kdist_acroC3.b)
-
-#creating the tree
-k_tree_acroC3.b <- kdist_acroC3.b %>% phangorn::upgma()
-
-#subsetting the metadata
-seqs_wide_acroC3.b <- acro_seqs.b[acro_seqs.b$Vial %in% seqs_wide_acroC3_subset.b$Vial,] %>% 
-  dplyr::select(Vial, name, value) %>%
-  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
-  tibble::column_to_rownames(var = "Vial")
-
-#creating unifrac distance matrix and tree 
-k_unidist_acroC3.b <- GUniFrac(seqs_wide_acroC3.b, k_tree_acroC3.b)   #GUniFrac calculates all the distances 
-k_unidist_acroC3.b <- k_unidist_acroC3.b$unifracs
-
-#GUniFrac with alpha 0.5
-du_acroC3.b <- k_unidist_acroC3.b[, , "d_0.5"]    # GUniFrac with alpha 0.5 
-dist_acroC3.b <- as.dist(du_acroC3.b, diag = FALSE)
-```
-
-###6.4.1 Acropora AHCL1 Dartseq Tree
-```{r}
-load("HostAdmix/gl3.csmp.acroC3.RData")
-
-library(adegenet)
-
-# calculate a distance matrix
-dist_matrix_acroC3 <- gl.dist.ind(gl3.csmp.acroC3, method = "euclidean", scale = TRUE)
-# convert the distance matrix to a dist object
-dart.acroC3.tree <- as.dist(dist_matrix_acroC3)
-```
-
-###6.4.2 Subset H and P matrices
-```{r}
-library(vegan)
-
-#convert host (H) and symbiont (P) distance trees as data matrices 
-H.dist.acroC3 <- dart.acroC3.tree %>% as.matrix()
-P.dist.acroC3 <- dist_acroC3.b %>% as.matrix()
-
-#must have same number of dimensions 
-dim(H.dist.acroC3)
-dim(P.dist.acroC3)
-
-# Subset to only the samples that are in both datasets
-intersect_samples.acroC3 <- intersect(rownames(H.dist.acroC3), rownames(P.dist.acroC3))
-P.dist_intersect.acroC3 <- P.dist.acroC3[intersect_samples.acroC3, ]
-H.dist_intersect.acroC3 <- H.dist.acroC3[intersect_samples.acroC3, ]
-
-# Check that the samples are now aligned
-all(rownames(H.dist_intersect.acroC3) == rownames(P.dist_intersect.acroC3))
-
-#re-check dimensions
-dim(H.dist_intersect.acroC3)
-dim(P.dist_intersect.acroC3)
-
-#where is the issue with one extra in H dist? 
-setdiff(rownames(H.dist_intersect.acroC3), rownames(P.dist_intersect.acroC3))
-setdiff(colnames(H.dist_intersect.acroC3), colnames(P.dist_intersect.acroC3))
-
-# Identify the column that is missing in P.dist_intersect
-missing_col.acroC3 <- setdiff(colnames(H.dist_intersect.acroC3), colnames(P.dist_intersect.acroC3))
-# A ten 193
-
-# Remove the missing column from H.dist_intersect
-H.dist_intersect_complete.acroC3 <- H.dist_intersect.acroC3[, !colnames(H.dist_intersect.acroC3) %in% missing_col.acroC3]
-
-# Subset to only the samples that are in both datasets
-intersect_samples.acroC3 <- intersect(rownames(H.dist_intersect_complete.acroC3), rownames(P.dist_intersect.acroC3))
-P.dist.acroC3 <- P.dist_intersect.acroC3[intersect_samples.acroC3, ]
-H.dist.acroC3 <- H.dist_intersect_complete.acroC3[intersect_samples.acroC3, ]
-
-#recheck dimensions - all good 
-dim(P.dist.acroC3)
-dim(H.dist.acroC3)
-
-#201 samples total 
-```
-
-
-###6.4.3 Perform Paco analysis
-```{r, include = FALSE}
-# Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont 
-
-paco.acroC3 <- procrustes(H.dist.acroC3, P.dist.acroC3, symmetric = FALSE)
-summary(paco.acroC3)
-
-#check residuals 
-#paco error chart 
-plot(paco.acroC3, kind = 1, type = "text")
-
-#show paco residuals. higher numbers mean these are the samples that have high dissimilarity between the symbiont and host trees
-plot(paco.acroC3, kind = 2, type = "text")
-```
-
-
-###6.4.4 Acropora AHCL1 procrustes plot
-```{r}
-hp.df.acroC3 <- data.frame(rda1=paco.acroC3$Yrot[,1],
-rda2=paco.acroC3$Yrot[,2],xrda1=paco.acroC3$X[,1],
-xrda2=paco.acroC3$X[,2]) %>% 
-  tibble::rownames_to_column(var = "Vial") %>% 
- filter(!Vial %in% c("A ten 194", "A ten 216", "A ten 282"))  #filter 3 outliers
-
-#left join the metadata to get reef into the dataframe 
-hp.df.acroC3.2 <- hp.df.acroC3 %>% left_join(meta.reef) %>% 
-  mutate(Reef = factor(Reef, levels = c("Osprey", "Bougainville", "Moore", "Willis", "Holmes", "Chilcott", "Herald","Lihou", "Flinders", "Marion", "Frederick", "Saumarez", "Wreck"))) 
-
-procrust.acroC3 <- ggplot(hp.df.acroC3.2) +
-  geom_segment(aes(x=rda1,y=rda2,xend=xrda1,yend=xrda2), size = .2) +
-  geom_point(aes(x=rda1, y=rda2, shape = "Host", color = Reef)) +
-  geom_point(aes(x=xrda1, y=xrda2, shape = "Symbiont", color = Reef)) +
-  scale_shape_manual(name = "Groups", 
-                     values = c("Host" = 17, "Symbiont" = 19)) +
-  scale_colour_manual(values = reef_pal2) +
-      theme(legend.position = "none") +
-  theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank()) +
-  theme(aspect.ratio = 1)
-  
-
-procrust.acroC3
-```
-
-```{r}
-procrust.acroC3 + procrust.acro
-```
-
-
-###6.4.5 Test significance 
-```{r}
-#testing significance 
-protest(X = H.dist.acroC3, Y = P.dist.acroC3, scores = "sites", permutations = 999)
-```
 
 #6.5 Fig 3 Procrustes
 ```{r}
@@ -2461,8 +2102,8 @@ procrust.pmea + procrust.pver + procrust.acro + procrust.acro.sym
 ```{r}
 #load genetic data from the host genetic models. has the PC1 and PC2 for each species
 load("ind_coords.acro.RData")
-load("ind_coords.pmea.RData")
-load("ind_coords.pver.RData")
+load("ind_coords.iso.RData")
+load("ind_coords.monti.RData")
 ```
 
 
@@ -2504,8 +2145,7 @@ sort(vif.cca(ord_pmh8))
    # 1.162181     1.344646     1.531987     1.962000     6.066496     7.006022 
 
 # Use ordistep to further refine the model
-ord_pmh8_backward <- ordistep(ord_pmh8, direction = "backward", permutations = 999)
-anova(ord_pmh8_backward, by = 'margin')
+
 
 #Model: dbrda(formula = dist_pmh8_ordered ~ Lat + admix1 + catBleaching, data = meta.pmea.admix)
            #  Df SumOfSqs       F Pr(>F)    
@@ -2523,31 +2163,12 @@ meta.pmea.admix <- meta.pmea.admix %>%
   tibble::rownames_to_column(var = "Vial")
 
 #extract scores (values assigned to Vials) from dbRDA 
-pmh8_scores <- as.data.frame(ord_pmh8_backward$CCA$wa)  %>%
-  tibble::rownames_to_column(var = "Vial") %>%
-  left_join(., meta.pmea.admix)
+
 
 #extract vectors from dbRDA 
-pmh8_vectors <- as.data.frame(ord_pmh8_backward$CCA$biplot) %>%
-  tibble::rownames_to_column(var = "factors")
 
 #produce dbRDA plot 
-pmh8_fullrda <- pmh8_scores %>%
- # mutate(Reef = fct_relevel(Reef, reef_order)) %>%
-    ggplot(aes(x = dbRDA1, y = dbRDA2)) +
-      geom_point(aes(fill = admix1), size = 4, shape = 21) +
-        geom_label_repel(data = pmh8_vectors, aes(x = dbRDA1, y = dbRDA2, label = factors), box.padding = 0.5, size = 4, segment.colour = NA) +
-      geom_segment(data = pmh8_vectors, aes(x = 0, xend = dbRDA1, y = 0, yend = dbRDA2), 
-      size = 0.5, arrow = arrow(length = unit(0.5, "cm")), colour = "royalblue2") +
-     guides(fill = guide_colorbar (reverse = T)) +
-      scale_fill_viridis_c(option = "magma", direction = -1) +
-     theme(legend.position = "none") +
-    theme(aspect.ratio = 1, text = element_text(size = 15)) +
-  theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank())
 
-pmh8_fullrda
 ```
 
 
