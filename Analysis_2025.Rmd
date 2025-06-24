@@ -62,6 +62,14 @@ seqs_iso <- read_tsv("seqs.abs.Isopora.txt") %>%
   filter(!grepl("-20", sample_name) & !grepl("b", sample_name))
 
 seqs_iso
+
+seqs_acro <- read_tsv("seqs.abs.acro.txt") %>% 
+    filter(!(is.na(sample_name))) %>%
+  dplyr::select(sample_name, `A1`:`G3ai`) %>% 
+  mutate(sample_name = as.factor(sample_name)) %>% 
+  filter(!grepl("-20", sample_name) & !grepl("b", sample_name))
+
+seqs_acro
 ```
 
 
@@ -246,6 +254,7 @@ all_data_monti <- rbind(seqs_long_monti, profile_data_monti)
 
 ```
 
+Need to check the type profiles
 
 ```{r Isopora}
 # Convert to long format
@@ -284,16 +293,16 @@ seqs_pal = rainbow(n, s=.6, v=.9)[sample(1:n,n, replace = FALSE)]
 names(seqs_pal) <- levels(seqs_long_iso$name)
 
 # Read in the profile data
-profiles_raw_iso <- read_tsv("profiles.abs.iso.txt", skip = 6) %>%
-    select(sample_name = `...2`, `A1-A1qd-A1qe`:`G3fd`) %>%
+profiles_raw_iso <- read_tsv("profiles.abs.Isopora.txt", skip = 6) %>%
+    select(sample_name = `...2`, `A1`:`F4q`) %>%
     filter(!is.na(sample_name)) %>%
-  select(sample_name, `A1-A1qd-A1qe`:`G3fd`)
+  select(sample_name, `A1`:`F4q`)
 
 #Convert to long format 
 profiles_long_iso <- profiles_raw_iso %>%
-  pivot_longer(`A1-A1qd-A1qe`:`G3fd`) %>% # Convert it to long format
+  pivot_longer(`A1`:`F4q`) %>% # Convert it to long format
   mutate(name = paste0("p_", name)) %>% # Add a p_ to the beginning of each profile (Some profiles are single sequence profiles and clash with the Sequence names)
-  filter(sample_name %in% seqs_long_iso$sample_name) %>% # Remove samples that dont appear in the Sequence dataframe
+  filter(sample_name %in% seqs_long$sample_name) %>% # Remove samples that dont appear in the Sequence dataframe
   group_by(sample_name) %>%
   mutate(value = as.numeric(value)) %>%
   filter(value > 0) %>% # Remove 0 abundance profiles
@@ -330,6 +339,93 @@ all_pal['non-profile sequences'] <- "#808080"
 
 # Join profiles and sequence data together into single dataframe and add more metadata
 all_data_iso <- rbind(seqs_long_iso, profile_data_iso) 
+```
+
+
+```{r Acropora}
+# Convert to long format
+seqs_long_acro <- seqs_acro %>%
+  filter(!is.na(sample_name)) %>%
+  select(sample_name, `A1`:`G3ai`) %>%
+  pivot_longer(`A1`:`G3ai`) %>%
+  filter(value > 0) %>% # Remove zero values
+  left_join(., meta)
+
+# Q. Are we working with the post-med seqs according to the metadata in seqs?
+san_check <- seqs_long_acro %>%
+  group_by(sample_name) %>%
+  summarise(total = sum(value)) #A. yes
+
+# Create a list of samples to keep that didnt fail to sequence
+keepers_ss <- san_check %>%
+  filter(total > 1500)
+
+non_keep <- san_check %>% 
+  filter(total < 1500)
+
+#we filter out 2 samples with less than A142 and A191
+
+# Filter out the failed samples
+seqs_long_acro <- seqs_long_acro %>%
+  filter(sample_name %in% keepers_ss$sample_name) %>%
+  group_by(sample_name) %>%
+  mutate(value_rel = value/sum(value)) %>% # Convert to relative abundance
+  ungroup() %>%
+  mutate(name = as.factor(name)) # Make sample names a factor
+
+# Create a random palette for each sequence
+n_acro <- length(levels(seqs_long_acro$name))
+seqs_pal = rainbow(n, s=.6, v=.9)[sample(1:n,n, replace = FALSE)]
+names(seqs_pal) <- levels(seqs_long$name)
+
+# Read in the profile data
+profiles_raw_acro <- read_tsv("profiles.abs.acro.txt", skip = 6) %>%
+    select(sample_name = `...2`, `A1-A1gr-A1gd-A1mm-A1bf`:`D1-D17i-D17s-D1r-D17r`) %>%
+    filter(!is.na(sample_name)) %>%
+  select(sample_name, `A1-A1gr-A1gd-A1mm-A1bf`:`D1-D17i-D17s-D1r-D17r`)
+
+#Convert to long format 
+profiles_long_acro <- profiles_raw_acro%>%
+  pivot_longer(`A1-A1gr-A1gd-A1mm-A1bf`:`D1-D17i-D17s-D1r-D17r`) %>% # Convert it to long format
+  mutate(name = paste0("p_", name)) %>% # Add a p_ to the beginning of each profile (Some profiles are single sequence profiles and clash with the Sequence names)
+  filter(sample_name %in% seqs_long$sample_name) %>% # Remove samples that dont appear in the Sequence dataframe
+  group_by(sample_name) %>%
+  mutate(value = as.numeric(value)) %>%
+  filter(value > 0) %>% # Remove 0 abundance profiles
+  mutate(sample_name = as.factor(sample_name),
+         name = as.factor(name)) %>% 
+  ungroup() %>%
+  left_join(., meta) # Add in metadata
+
+# What is the total number of profile-related sequences in each sample?
+profiles_sum_acro <- profiles_long_acro %>%
+  group_by(sample_name) %>%
+  summarise(total = sum(value))
+
+# How many sequences in each sample are not part of a profile?
+residual_acro <- left_join(profiles_sum_acro, san_check, by = "sample_name") %>%
+  mutate(residual = total.y - total.x) %>%
+  select(sample_name, value = residual) %>%
+  mutate(name = "non-profile sequences") %>%
+  left_join(., meta)
+
+# Combine the profiles and non-profile sequences
+profile_data_acro <- rbind(profiles_long_acro, residual_acro) %>%
+  group_by(sample_name) %>%
+  mutate(value_rel = value/sum(value)) # convert to relative abundance - in that sample 
+
+# Create palette for profiles (this is a darker palette)
+n_acro <- length(levels(profile_data_acro$name))
+profile_pal = rainbow(n, s=.6, v=.6)[sample(1:n,n, replace = FALSE)]
+names(profile_pal) <- levels(profile_data$name)
+
+# Merge the palettes and replace the non-profile sequences with grey
+all_pal_acro <- c(seqs_pal, profile_pal)
+all_pal['non-profile sequences'] <- "#808080" 
+
+# Join profiles and sequence data together into single dataframe and add more metadata
+all_data_acro <- rbind(seqs_long_acro, profile_data_acro) 
+
 ```
 
 # 1 Library Stats
