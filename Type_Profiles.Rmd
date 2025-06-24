@@ -52,7 +52,7 @@ Isopora_combined %>%
   mutate(cumulative_sum = cumsum(prop)) %>% 
   ungroup() %>%
   print(n=72) #%>% 
-  #save(file ="Isopora_Cluster_Type_Profiles.RData")
+ # write.csv(file ="Isopora_Cluster_Type_Profiles.csv")
 ```
 
 
@@ -100,7 +100,8 @@ Montipora_combined %>%
   ) %>%
   ungroup() %>%
   print(n = 101) %>%
-  save(file = "Montipora_Cluster_Type_Profiles.RData")
+  #save(file = "Montipora_Cluster_Type_Profiles.RData")
+  write.csv("Montipora_Cluster_Type_Profiles.csv")
 
 ```
 
