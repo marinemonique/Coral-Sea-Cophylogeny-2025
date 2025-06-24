@@ -27,3 +27,10 @@ profiles.abs.monti.txt
 ### Host
 ind_coords_monti.RData
 monti_gen.RData
+
+## Acropora
+## Symbioant
+profiles.abs.acro.txt
+seqs.abs.acro.txt
+seqs.acro.fasta
+## Host
