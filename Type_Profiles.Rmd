@@ -1,0 +1,107 @@
+---
+title: "Type Profiles"
+author: "Monique White"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+# Isopora
+
+## Import and filter Host data
+```{r}
+library(tidyverse)
+load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_Isopora_CS_2024/Isopora/ind_coords_iso.RData")
+
+Cluster_Isopora_H <- ind_coords_iso %>%
+  mutate(cluster = case_when(
+    Axis1 < -30 ~ "IC1",
+    Axis2 > 30 ~ "IC2",
+    Axis1 > 0 & Axis2 < 0 ~ "IC3",
+    TRUE ~ NA_character_  # Everything else gets NA
+  )) %>% 
+  rename("sample_name" = SampleID) #rename column to be able to join with Symbioant data
+
+```
+
+## Symbioant data
+```{r}
+load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_Isopora_CS_2024/symbioant_iso_all.RData")
+```
+
+### Subset Isopora based on host clustering
+```{r}
+Isopora_combined <- left_join(x = symbioant_iso_all, y= Cluster_Isopora_H, by = "sample_name")
+```
+
+## Combine Host and Sybioant
+```{r}
+Isopora_combined %>%
+  filter(str_detect(name, "p_")) %>%    #profiles start with p_
+  group_by(cluster, name) %>% #grouping by the host cluster and the div
+  dplyr:: count() %>%
+  dplyr:: arrange(cluster ,desc(n)) %>%
+  mutate(prop = n/sum(n)) %>%
+  mutate(cumulative_sum = cumsum(prop)) %>% 
+  ungroup() %>%
+  print(n=72) #%>% 
+  #save(file ="Isopora_Cluster_Type_Profiles.RData")
+```
+
+
+
+# Montipora
+
+## Import and filter Host data
+```{r}
+library(tidyverse)
+load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/ind_coords_monti.RData")
+
+Cluster_Montipora_H <- ind_coords_monti %>% 
+  mutate(cluster = case_when(
+    Axis1 < -9 ~ "M1a",
+    Axis1 >-9 & Axis1 < -3 ~ "M1b",
+    Axis2 > 15 ~ "M2",
+    Axis1 > 7 & Axis1 <20 ~ "M3",
+    Axis1 > 20 ~ "M4"
+  )) %>% 
+  rename("sample_name" = SampleID)
+  
+```
+
+## Symbioant data
+```{r}
+load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/symbioant_monti_all.RData")
+```
+
+## Combine Host and Sybioant
+```{r}
+Montipora_combined <- left_join(x = symbioant_monti_all, y= Cluster_Montipora_H, by = "sample_name")
+```
+
+## Type Profiles 
+```{r}
+Montipora_combined %>%
+  filter(str_detect(name, "p_")) %>%    # profiles start with p_
+  group_by(cluster, name) %>%           # grouping by cluster and profile name
+  count() %>%
+  arrange(cluster, desc(n)) %>%
+  group_by(cluster) %>%                 # group again by cluster for proportions
+  mutate(
+    prop = n / sum(n),
+    cumulative_sum = cumsum(prop)
+  ) %>%
+  ungroup() %>%
+  print(n = 101) %>%
+  save(file = "Montipora_Cluster_Type_Profiles.RData")
+
+```
+
+
