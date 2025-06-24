@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Load Libraries
 
-```{r, warning = FALSE, echo = FALSE}
+```{r, warning = FALSE, echo = FALSE, message=FALSE}
 library(ggsci)
 library(tidyverse)
 library(dplyr)
@@ -76,8 +76,9 @@ seqs_acro
 ### Load Metadata
 
 ```{r}
+library(readxl)
 #Vial is the unique genotype for each coral sample. 
-CoralSea2024_Metadata <- read_excel("~/AIMS@JCU/CoralSea2024_Metadata.xlsx")
+CoralSea2024_Metadata <- read_excel("CoralSea2024_Metadata.xlsx")
 
 meta <- CoralSea2024_Metadata %>% 
   rename("VialID" = "sample_name",
@@ -166,6 +167,7 @@ pal_df <- data.frame(names = names(palette), col = palette)
 
 ### Combining sequence/metadata 
 
+# Montipora
 
 ```{r}
 # Convert to long format
@@ -220,7 +222,7 @@ profiles_long_monti <- profiles_raw_monti %>%
   mutate(sample_name = as.factor(sample_name),
          name = as.factor(name)) %>% 
   ungroup() %>%
-  left_join(., meta_monti) # Add in metadata
+  left_join(., meta) # Add in metadata
 
 # What is the total number of profile-related sequences in each sample?
 profiles_sum_monti <- profiles_long_monti %>%
@@ -232,7 +234,7 @@ residual_monti <- left_join(profiles_sum_monti, san_check, by = "sample_name") %
   mutate(residual = total.y - total.x) %>%
   select(sample_name, value = residual) %>%
   mutate(name = "non-profile sequences") %>%
-  left_join(., meta_monti)
+  left_join(., meta)
 
 # Combine the profiles and non-profile sequences
 profile_data_monti <- rbind(profiles_long_monti, residual) %>%
@@ -253,8 +255,8 @@ all_data_monti <- rbind(seqs_long_monti, profile_data_monti)
 
 ```
 
-Need to check the type profiles
 
+# Isopora
 ```{r Isopora}
 # Convert to long format
 seqs_long_iso <- seqs_iso %>%
@@ -340,6 +342,23 @@ all_pal['non-profile sequences'] <- "#808080"
 all_data_iso <- rbind(seqs_long_iso, profile_data_iso) 
 ```
 
+```{r}
+# How many samples per species?
+all_data_iso %>%
+  distinct(sample_name, Reef) %>%
+  group_by(Reef) %>% 
+  summarise(total_samples = n())
+
+isopora_study_total <- all_data_iso %>% 
+   filter(!(str_detect(name, "p_")),
+         name != "non-profile sequences") %>% 
+  summarise(total_seqs = sum(value)) %>%
+  pull(total_seqs)
+
+#9382894 sequences in isopora dataset
+```
+
+# Acropora
 
 ```{r Acropora}
 # Convert to long format
@@ -430,9 +449,11 @@ all_data_acro <- rbind(seqs_long_acro, profile_data_acro)
 # 1 Library Stats
 
 ##1.1 Basic Stats
-Have not done this part yet.
+
 ```{r}
 # How many samples per species?
+all_data <- bind_rows(all_data_acro, all_data_iso, all_data_monti) #combine all species 
+
 all_data %>%
   distinct(sample_name, mtORF) %>%
   group_by(mtORF) %>% 
@@ -1341,96 +1362,11 @@ light.data <- averaged_data %>% dplyr::select(c(Site.Name, Chl_a_sum, Kd_490)) %
 
 ## 5.1 Pver dbRDA
 ```{r}
-#importing unifrac distances for analysis 
-meta_pver <- meta %>% 
-  left_join(., light.data) %>% 
-  filter(mtORF == "Pverrucosa") %>%
-  filter(sample_name %in% keepers_ss$sample_name) %>%
-  mutate(catBleaching = as.numeric(catBleaching)) %>%
-  tibble::column_to_rownames(var = "Vial") %>%
-  mutate(Vial = rownames(.)) 
 
-save(meta_pver, file = "meta_pver.RData")
-library(poppr)
-
-#combine Unifrac distances with enviro. data.
-dist_pver_ordered <- dist_subset(dist_pver, rownames(meta_pver))
-dist_pver_ordered <- as.dist(as.matrix(dist_pver)[rownames(meta_pver), rownames(meta_pver)])
-# Make a correlation matrix of numeric variables
-cm <- cor(meta_pver %>% dplyr::select(Depth, maxDHW, MMM, DHW2020,Lat, Long))
-
-#check correlations visually 
-corrplot(cm) 
-cm %>% cor()
-
-# Check the vif scores of the full model
-ord_pver_full <- dbrda(dist_pver_ordered ~ Lat + Long + MMM + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta_pver)
-
-sort(vif.cca(ord_pver_full)) 
-  #     Depth catBleaching       maxDHW      DHW2020         Long          Lat 
-   # 1.095734     1.110180     2.884414     3.663767    10.442204    20.729312 
-  #       MMM    Chl_a_sum       Kd_490 
-  # 31.698438    51.591898    57.896562 
-
-# Reduce the model (consult the corplot and vif scores). We will omit Long and MMM, and latitude will reflect overall biogeographic patterns 
-ord_pver <- dbrda(dist_pver_ordered ~ maxDHW + Lat + Depth + catBleaching + DHW2020 + Kd_490, data = meta_pver)
-
-sort(vif.cca(ord_pver)) 
-    #   Depth catBleaching       maxDHW       Kd_490          Lat      DHW2020 
- #   1.042940     1.088547     1.503779     1.834879     2.844377     3.114021 
-
-# Use ordistep to run a backward stepwise model. This will reduce the model to the most significant parameters 
-os_pver_backward <- ordistep(ord_pver, direction = "backward", permutations = 999)
-anova(os_pver_backward, by = 'margin')
-
-#Model: dbrda(formula = dist_pver_ordered ~ Lat + DHW2020 + Kd_490, data = meta_pver)
-     #     Df SumOfSqs      F Pr(>F)   
-#Lat        1   0.0735 2.8782  0.013 * 
-#DHW2020    1   0.0509 1.9941  0.067 . 
-#Kd_490     1   0.0786 3.0778  0.010 **
-#Residual 148   3.7811       
-
-
-R2adj <- RsquareAdj(ord_pver)$adj.r.squared
-R2adj 
-#[1] 0.03517611
-
-summary(ord_pver)
-
-#variance partitioning to see how much variation is explained by each factor 
-varp <- varpart(dist_pver_ordered, ~Lat, ~Kd_490, data = meta_pver)
-plot(varp, digits = 2, Xnames = c("Lat", "KD 490"), bg = c("navy", "tomato", "green"))
-
-#extract dbRDA scores
-pver_scores <- as.data.frame(scores(os_pver_backward, display = "sites")) %>%
-  tibble::rownames_to_column(var = "Vial") %>%
-  left_join(., meta_pver)
-
-#extract dbRDA vectors
-pver_vectors <- as.data.frame(os_pver_backward$CCA$biplot) %>%
-  tibble::rownames_to_column(var = "factors")
-
-#produce dbRDA plot 
-pver_fullrda <- pver_scores %>%
-  mutate(Reef = fct_relevel(Reef, reef_order)) %>%
-    ggplot(aes(x = dbRDA1, y = dbRDA2)) +
-      geom_point(aes(fill = Lat), size = 3, shape = 21) +
-      geom_label_repel(data = pver_vectors, aes(x = dbRDA1, y = dbRDA2, label = factors), box.padding = 0.75, size = 4, segment.colour = NA) +
-      geom_segment(data = pver_vectors, aes(x = 0, xend = dbRDA1, y = 0, yend = dbRDA2), 
-      size = 0.5, arrow = arrow(length = unit(0.5, "cm")), colour = "royalblue2") +
-      scale_fill_viridis_c(option = "magma", direction = -1) +
-  theme(aspect.ratio = 1, text = element_text(size = 15)) +
-  theme(legend.position = "none") +
-  theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank())
-
-
-pver_fullrda
 ```
 
 ```{r}
-pver_scores %>% filter(dbRDA1 > -1)
+
 ```
 
 
