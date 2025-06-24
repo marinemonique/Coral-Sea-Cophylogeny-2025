@@ -48,11 +48,14 @@ Isopora_combined %>%
   group_by(cluster, name) %>% #grouping by the host cluster and the div
   dplyr:: count() %>%
   dplyr:: arrange(cluster ,desc(n)) %>%
-  mutate(prop = n/sum(n)) %>%
-  mutate(cumulative_sum = cumsum(prop)) %>% 
+  group_by(cluster) %>%                 # group again by cluster for proportions
+  mutate(
+    prop = n / sum(n),
+    cumulative_sum = cumsum(prop)
+  ) %>%
   ungroup() %>%
-  print(n=72) #%>% 
- # write.csv(file ="Isopora_Cluster_Type_Profiles.csv")
+  print(n=72) %>% 
+ write.csv(file ="Isopora_Cluster_Type_Profiles.csv")
 ```
 
 
@@ -99,9 +102,9 @@ Montipora_combined %>%
     cumulative_sum = cumsum(prop)
   ) %>%
   ungroup() %>%
-  print(n = 101) %>%
+  print(n = 101) #%>%
   #save(file = "Montipora_Cluster_Type_Profiles.RData")
-  write.csv("Montipora_Cluster_Type_Profiles.csv")
+  #write.csv("Montipora_Cluster_Type_Profiles.csv")
 
 ```
 
