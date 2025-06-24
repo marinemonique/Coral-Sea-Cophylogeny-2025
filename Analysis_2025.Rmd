@@ -696,43 +696,36 @@ poci_tree_mat / bar_uni_poci
 ```
 
 
-#2.2 Acro UPGMA Tree
-
+#2.2 Isopora UPGMA Tree
 
 ```{r}
-#read in file 
-
-
-# Unifracs With a kmer-based tree
-
-
-
-# Get the community matrix
-
-
-# compute unifrac distances  
-
-
- # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
-
-
-# Cluster the samples
-
-
-# Make the sample tree
-
-
-# Get a sample order from ggtree
-
-
-# Start plotting the composition data
-
-
-# find the likely distinguishing seqs in here
-
-
-# colour them black to check
+fasta_iso_symbioant <- read_fasta_df("seqs.isopora.fasta") %>% 
+   filter(label %in% seqs_long_iso$name) %>%   #only keeping DNA seqs that appear in seqs_long subset 
+  deframe() %>%
+  as_dna()
  
+#creating the tree
+kdist_iso_symbioant <- fasta_iso_symbioant %>%
+  dna_to_DNAbin() %>%
+  kdistance(k = 7, residues = "DNA", method = "edgar") %>%
+  as.matrix()
+```
+
+```{r}
+#k_tree_iso_symbioant <- kdist_iso_symbioant %>% phangorn::upgma()
+
+#k_tree_iso_symbioant
+
+#save(k_tree_iso_symbioant, file = "kdist_iso_symbioant.RData")
+load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_Isopora_CS_2024/kdist_iso_symbioant.RData")
+```
+```{r}
+seqs_wide_iso_symbioant <- seq_data_iso %>%
+  dplyr::select(sample_name, name, value) %>%
+  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
+  tibble::column_to_rownames(var = "sample_name")
+
+head(seqs_wide_iso_symbioant)
 ```
 
 
