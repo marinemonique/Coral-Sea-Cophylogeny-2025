@@ -8,12 +8,22 @@ Symbionant data is
 Main analysis in run in Analysis_2025.RMD
 
 Files required for Analysis_2025.RMD to run:
-#### Symbioant
+
+##Isopora
+
+### Symbioant
 seqs.abs.isopora.txt
 seqs.isopora.fasta
 profiles.abs.Isopora.txt
-
 ### Host
-
 ind_coords_iso.RData
 iso_gen.R
+
+## Montipora
+### Symbioant
+seqs.abs.monti.txt
+seqs.monti.fasta
+profiles.abs.monti.txt
+### Host
+ind_coords_monti.RData
+monti_gen.RData
