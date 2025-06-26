@@ -1201,7 +1201,7 @@ xrda2=paco.monti$X[,2]) %>%
 
 
 #filter metadata to just reef
-meta.reef <- meta_monti %>% 
+meta.reef <- meta %>% 
   select(sample_name, Reef) %>% 
   rename(sample_name = "Vial")
 
@@ -1343,7 +1343,7 @@ xrda2=paco.acro$X[,2]) %>%
 
 
 #filter metadata to just reef
-meta.reef <- meta_acro %>% 
+meta.reef <- meta %>% 
   select(sample_name, Reef) %>% 
   rename(sample_name = "Vial")
 
