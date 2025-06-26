@@ -1251,7 +1251,7 @@ library(poppr)
 ind_names_host_acro <- indNames(acro_gen)
 
 # Subset the genind object to retain only matching individuals
-acro_gen_subset <- acro_gen[ind_names_host %in% shared_seqs_acro$sample_name, ]
+acro_gen_subset <- acro_gen[ind_names_host_acro %in% shared_seqs_acro$sample_name, ]
 
 length(indNames(acro_gen))          # Before 189
 length(indNames(acro_gen_subset))   # After 188
