@@ -17,12 +17,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, warning = FALSE, echo = FALSE, message=FALSE}
 library(ggsci)
 library(tidyverse)
-library(dplyr)
-library(forcats)
+library(dplyr) #not sure needed bc included in tidyverse
+library(forcats) #not sure needed bc included in tidyverse
 library(reshape2)
-library(stringr)
-library(tidyr)
-library(tibble)
+library(stringr)#not sure needed bc included in tidyverse
+library(tidyr) #not sure needed bc included in tidyverse
+library(tibble) #not sure needed bc included in tidyverse
 library(sangerseqR)
 library(DECIPHER)
 library(Biostrings)
@@ -190,9 +190,9 @@ keepers_ss <- san_check_monti %>%
 non_keep <- san_check_monti %>% 
   filter(total < 1500)
 
-#we filter out 2 samples with less than A142 and A191
+#we filter out 0 samples
 
-# Filter out the failed samples
+# Filter out the failed samples (Not required for Montipora)
 seqs_long_monti <- seqs_long_monti %>%
   filter(sample_name %in% keepers_ss$sample_name) %>%
   group_by(sample_name) %>%
@@ -230,14 +230,14 @@ profiles_sum_monti <- profiles_long_monti %>%
   summarise(total = sum(value))
 
 # How many sequences in each sample are not part of a profile?
-residual_monti <- left_join(profiles_sum_monti, san_check, by = "sample_name") %>%
+residual_monti <- left_join(profiles_sum_monti, san_check_monti, by = "sample_name") %>%
   mutate(residual = total.y - total.x) %>%
   select(sample_name, value = residual) %>%
   mutate(name = "non-profile sequences") %>%
   left_join(., meta)
 
 # Combine the profiles and non-profile sequences
-profile_data_monti <- rbind(profiles_long_monti, residual) %>%
+profile_data_monti <- rbind(profiles_long_monti, residual_monti) %>%
   group_by(sample_name) %>%
   mutate(value_rel = value/sum(value)) # convert to relative abundance - in that sample 
 
@@ -278,7 +278,7 @@ keepers_ss <- san_check_iso %>%
 non_keep <- san_check_iso %>% 
   filter(total < 1500)
 
-#we filter out 2 samples with less than A142 and A191
+#No sequences are filtered out
 
 # Filter out the failed samples
 seqs_long_iso <- seqs_long_iso %>%
@@ -303,7 +303,7 @@ profiles_raw_iso <- read_tsv("profiles.abs.Isopora.txt", skip = 6) %>%
 profiles_long_iso <- profiles_raw_iso %>%
   pivot_longer(`A1`:`F4q`) %>% # Convert it to long format
   mutate(name = paste0("p_", name)) %>% # Add a p_ to the beginning of each profile (Some profiles are single sequence profiles and clash with the Sequence names)
-  filter(sample_name %in% seqs_long$sample_name) %>% # Remove samples that dont appear in the Sequence dataframe
+  filter(sample_name %in% seqs_long_iso$sample_name) %>% # Remove samples that dont appear in the Sequence dataframe
   group_by(sample_name) %>%
   mutate(value = as.numeric(value)) %>%
   filter(value > 0) %>% # Remove 0 abundance profiles
@@ -318,25 +318,17 @@ profiles_sum_iso <- profiles_long_iso %>%
   summarise(total = sum(value))
 
 # How many sequences in each sample are not part of a profile?
-residual_iso <- left_join(profiles_sum_iso, san_check, by = "sample_name") %>%
+residual_iso <- left_join(profiles_sum_iso, san_check_iso, by = "sample_name") %>%
   mutate(residual = total.y - total.x) %>%
   select(sample_name, value = residual) %>%
   mutate(name = "non-profile sequences") %>%
   left_join(., meta)
 
 # Combine the profiles and non-profile sequences
-profile_data_iso <- rbind(profiles_long_iso, residual) %>%
+profile_data_iso <- rbind(profiles_long_iso, residual_iso) %>%
   group_by(sample_name) %>%
   mutate(value_rel = value/sum(value)) # convert to relative abundance - in that sample 
 
-# Create palette for profiles (this is a darker palette)
-n_iso <- length(levels(profile_data_iso$name))
-profile_pal = rainbow(n, s=.6, v=.6)[sample(1:n,n, replace = FALSE)]
-names(profile_pal) <- levels(profile_data_iso$name)
-
-# Merge the palettes and replace the non-profile sequences with grey
-all_pal <- c(seqs_pal, profile_pal)
-all_pal['non-profile sequences'] <- "#808080" 
 
 # Join profiles and sequence data together into single dataframe and add more metadata
 all_data_iso <- rbind(seqs_long_iso, profile_data_iso) 
@@ -370,15 +362,15 @@ seqs_long_acro <- seqs_acro %>%
   left_join(., meta)
 
 # Q. Are we working with the post-med seqs according to the metadata in seqs?
-san_check <- seqs_long_acro %>%
+san_check_acro <- seqs_long_acro %>%
   group_by(sample_name) %>%
   summarise(total = sum(value)) #A. yes
 
 # Create a list of samples to keep that didnt fail to sequence
-keepers_ss <- san_check %>%
+keepers_ss <- san_check_acro %>%
   filter(total > 1500)
 
-non_keep <- san_check %>% 
+non_keep <- san_check_acro %>% 
   filter(total < 1500)
 
 #we filter out 2 samples with less than A142 and A191
@@ -394,7 +386,7 @@ seqs_long_acro <- seqs_long_acro %>%
 # Create a random palette for each sequence
 n_acro <- length(levels(seqs_long_acro$name))
 seqs_pal = rainbow(n, s=.6, v=.9)[sample(1:n,n, replace = FALSE)]
-names(seqs_pal) <- levels(seqs_long$name)
+names(seqs_pal) <- levels(seqs_long_acro$name)
 
 # Read in the profile data
 profiles_raw_acro <- read_tsv("profiles.abs.acro.txt", skip = 6) %>%
@@ -406,7 +398,7 @@ profiles_raw_acro <- read_tsv("profiles.abs.acro.txt", skip = 6) %>%
 profiles_long_acro <- profiles_raw_acro%>%
   pivot_longer(`A1-A1gr-A1gd-A1mm-A1bf`:`D1-D17i-D17s-D1r-D17r`) %>% # Convert it to long format
   mutate(name = paste0("p_", name)) %>% # Add a p_ to the beginning of each profile (Some profiles are single sequence profiles and clash with the Sequence names)
-  filter(sample_name %in% seqs_long$sample_name) %>% # Remove samples that dont appear in the Sequence dataframe
+  filter(sample_name %in% seqs_long_acro$sample_name) %>% # Remove samples that dont appear in the Sequence dataframe
   group_by(sample_name) %>%
   mutate(value = as.numeric(value)) %>%
   filter(value > 0) %>% # Remove 0 abundance profiles
@@ -421,7 +413,7 @@ profiles_sum_acro <- profiles_long_acro %>%
   summarise(total = sum(value))
 
 # How many sequences in each sample are not part of a profile?
-residual_acro <- left_join(profiles_sum_acro, san_check, by = "sample_name") %>%
+residual_acro <- left_join(profiles_sum_acro, san_check_acro, by = "sample_name") %>%
   mutate(residual = total.y - total.x) %>%
   select(sample_name, value = residual) %>%
   mutate(name = "non-profile sequences") %>%
@@ -432,18 +424,22 @@ profile_data_acro <- rbind(profiles_long_acro, residual_acro) %>%
   group_by(sample_name) %>%
   mutate(value_rel = value/sum(value)) # convert to relative abundance - in that sample 
 
-# Create palette for profiles (this is a darker palette)
-n_acro <- length(levels(profile_data_acro$name))
-profile_pal = rainbow(n, s=.6, v=.6)[sample(1:n,n, replace = FALSE)]
-names(profile_pal) <- levels(profile_data$name)
-
-# Merge the palettes and replace the non-profile sequences with grey
-all_pal_acro <- c(seqs_pal, profile_pal)
-all_pal['non-profile sequences'] <- "#808080" 
 
 # Join profiles and sequence data together into single dataframe and add more metadata
 all_data_acro <- rbind(seqs_long_acro, profile_data_acro) 
 
+```
+
+Palettes - not sure necessary
+```{r}
+# Create palette for profiles (this is a darker palette)
+n_acro <- length(levels(profile_data_acro$name))
+profile_pal = rainbow(n, s=.6, v=.6)[sample(1:n,n, replace = FALSE)]
+names(profile_pal) <- levels(profile_data_acro$name)
+
+# Merge the palettes and replace the non-profile sequences with grey
+all_pal_acro <- c(seqs_pal, profile_pal)
+all_pal['non-profile sequences'] <- "#808080" 
 ```
 
 
@@ -458,7 +454,7 @@ seq_data_iso <- all_data_iso %>%
   filter(!str_detect(name, "p_"))
 ```
 
-
+Importing fasta sequences
 ```{r}
 fasta_iso_symbioant <- read_fasta_df("seqs.isopora.fasta") %>% 
    filter(label %in% seqs_long_iso$name) %>%   #only keeping DNA seqs that appear in seqs_long subset 
@@ -466,6 +462,7 @@ fasta_iso_symbioant <- read_fasta_df("seqs.isopora.fasta") %>%
   as_dna()
 ```
 
+##1.1.1 Creating the tree
 ```{r}
 #creating the tree
 kdist_iso_symbioant <- fasta_iso_symbioant %>%
@@ -475,16 +472,16 @@ kdist_iso_symbioant <- fasta_iso_symbioant %>%
 ```
 
 ```{r}
-#k_tree_iso_symbioant <- kdist_iso_symbioant %>% phangorn::upgma()
+k_tree_iso_symbioant <- kdist_iso_symbioant %>% phangorn::upgma()
 
-#k_tree_iso_symbioant
+k_tree_iso_symbioant
 
 #save(k_tree_iso_symbioant, file = "kdist_iso_symbioant.RData")
 load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_Isopora_CS_2024/kdist_iso_symbioant.RData")
 ```
 
 ```{r}
-seqs_wide_iso_symbioant <- seq_data %>%
+seqs_wide_iso_symbioant <- seq_data_iso %>%
   dplyr::select(sample_name, name, value) %>%
   pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
   tibble::column_to_rownames(var = "sample_name")
@@ -492,6 +489,7 @@ seqs_wide_iso_symbioant <- seq_data %>%
 head(seqs_wide_iso_symbioant)
 ```
 
+###1.1.2. GUniFrac and Kdist Matrix
 ```{r}
 k_unidist_iso_symbioant <- GUniFrac(seqs_wide_iso_symbioant, k_tree_iso_symbioant)   #GUniFrac calculates all the distances 
 k_unidist_iso_symbioant <- k_unidist_iso_symbioant$unifracs
@@ -696,46 +694,14 @@ combined_plot_monti
 ```
 
 
-#2.2 Isopora UPGMA Tree
-
-```{r}
-fasta_iso_symbioant <- read_fasta_df("seqs.isopora.fasta") %>% 
-   filter(label %in% seqs_long_iso$name) %>%   #only keeping DNA seqs that appear in seqs_long subset 
-  deframe() %>%
-  as_dna()
- 
-#creating the tree
-kdist_iso_symbioant <- fasta_iso_symbioant %>%
-  dna_to_DNAbin() %>%
-  kdistance(k = 7, residues = "DNA", method = "edgar") %>%
-  as.matrix()
-```
-
-```{r}
-#k_tree_iso_symbioant <- kdist_iso_symbioant %>% phangorn::upgma()
-
-#k_tree_iso_symbioant
-
-#save(k_tree_iso_symbioant, file = "kdist_iso_symbioant.RData")
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_Isopora_CS_2024/kdist_iso_symbioant.RData")
-```
-```{r}
-seqs_wide_iso_symbioant <- seq_data_iso %>%
-  dplyr::select(sample_name, name, value) %>%
-  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
-  tibble::column_to_rownames(var = "sample_name")
-
-head(seqs_wide_iso_symbioant)
-```
 
 
-
-# 4 PCoAs
-**Here we are running a PCoA on UniFrac distances for the three communities associated with three different host groups (Pocillopora verrucosa, P. meandrina, and Acropora humilis) to look for patterns by reef in symbiont community structure** 
+# 2 PCoAs
+**Here we are running a PCoA on UniFrac distances for the X communities associated with X different host groups (Isopora, Montipora spp., Acropora humulis) to look for patterns by reef in symbiont community structure** 
 
 ##4.1 PCoA by Reef
 
-###4.1.1 Pver Reef PCoA
+###4.1.1 Isopora Reef PCoA
 ```{r}
 reef_order <- meta %>% distinct(Reef, Lat) %>%
   group_by(Reef) %>%
@@ -783,7 +749,7 @@ cat("Variance explained by the second PC: ", variance_explained_by_PC2, "\n")
 ```
 
 
-###4.1.2 Pmea Reef PCoA
+###4.1.2 Montipora Reef PCoA
 ```{r}
 pcoa_pmh8 <- cmdscale(dist_pmh8, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
 
@@ -882,7 +848,7 @@ pverPCA + pmh8PCA + acroPCA
 
 ## 4.2 PCoA by Bleaching
 
-###4.2.1 Pver Bleaching PCA
+###4.2.1 Isopora Bleaching PCA
 ```{r}
 library("RColorBrewer")
 my_colors <- c("#F5F5F5", "#F6E8C3", "#DFC27D", "#BF812D", "#8C510A", "#543005")
@@ -903,7 +869,7 @@ pverPCA.b <- MDSxy.pver.b %>%
 pverPCA.b
 ```
 
-###4.2.2 Pmea Bleaching PCA
+###4.2.2 Montipora Bleaching PCA
 ```{r}
 MDSxy.pmh8.b <- data.frame(pcoa_pmh8$points) %>% 
   rownames_to_column(var = "Vial") %>% 
