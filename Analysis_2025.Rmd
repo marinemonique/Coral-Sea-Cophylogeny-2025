@@ -615,6 +615,8 @@ load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/k_unidist_monti.R
 du_monti <- k_unidist_monti[, , "d_0.5"]   
 dist_monti <- as.dist(du_monti, diag = FALSE)
 
+dist_monti_symbioant <- dist_monti
+
 # Cluster the samples
 hclust_samps_monti <- upgma(du_monti)
 
@@ -913,7 +915,9 @@ acroPCA
 
 # 3 Procrustes
 ## 3.1 Isopora
+
 ```{r}
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/ind_coords_iso.RData")
 iso_seqs_host <- ind_coords_iso %>% 
   mutate("sample_name" = VialID)
 
@@ -951,7 +955,7 @@ library(poppr)
 ind_names_host_iso <- indNames(iso_gen)
 
 # Subset the genind object to retain only matching individuals
-iso_gen_subset <- iso_gen[ind_names_host %in% shared_seqs_iso$sample_name, ]
+iso_gen_subset <- iso_gen[ind_names_host_iso %in% shared_seqs_iso$sample_name, ]
 
 length(indNames(iso_gen))          # Before 189
 length(indNames(iso_gen_subset))   # After 188
@@ -997,8 +1001,8 @@ dim(P.dist_iso) #its really odd that the symbioant has 186 when the code running
 # Subset to only the samples that are in both datasets
 intersect_samples_row_iso <- intersect(rownames(H.dist_iso), rownames(P.dist_iso))
 intersect_samples_col_iso <- intersect(colnames(H.dist_iso), colnames(P.dist_iso)) # The host data set had 189, and the symbioant had 186
-P.dist_intersect_iso <- P.dist[intersect_samples_row_iso, intersect_samples_col_iso]
-H.dist_intersect_iso <- H.dist[intersect_samples_row_iso, intersect_samples_col_iso ]
+P.dist_intersect_iso <- P.dist_iso[intersect_samples_row_iso, intersect_samples_col_iso]
+H.dist_intersect_iso <- H.dist_iso[intersect_samples_row_iso, intersect_samples_col_iso ]
 
 # Subset to only the samples that are in both datasets
 intersect_samples_iso <- intersect(rownames(H.dist_intersect_iso), rownames(P.dist_intersect_iso))
@@ -1051,7 +1055,7 @@ xrda2=paco.iso$X[,2]) %>%
 
 
 #filter metadata to just reef
-meta.reef <- meta_iso %>% 
+meta.reef <- meta %>% 
   select(sample_name, Reef) %>% 
   rename(sample_name = "Vial")
 
@@ -1077,6 +1081,9 @@ save(procrust.iso, file = "procrust.iso.RData")
 
 ## 3.2 Montipora
 ```{r}
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/ind_coords_monti.RData")
+monti_seqs_host <- ind_coords_monti %>% 
+  mutate("sample_name" = VialID)
 #here is the subset with the data that matches the host data
 shared_seqs_monti <- inner_join(monti_seqs_host, seq_data_monti, by = "sample_name")
 
@@ -1092,7 +1099,7 @@ shared_seqs_monti <- shared_seqs_monti %>%
 ### 3.2.1 Host tree
 
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_montipora_CS_2024/montipora/monti_gen.RData") #load host data
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/monti_gen.RData") #load host data
 
 library(adegenet) #install required package
 library(poppr)
@@ -1102,7 +1109,7 @@ library(poppr)
 ind_names_host_monti <- indNames(monti_gen)
 
 # Subset the genind object to retain only matching individuals
-monti_gen_subset <- monti_gen[ind_names_host %in% shared_seqs_monti$sample_name, ]
+monti_gen_subset <- monti_gen[ind_names_host_monti %in% shared_seqs_monti$sample_name, ]
 
 length(indNames(monti_gen))          # Before 189
 length(indNames(monti_gen_subset))   # After 188
