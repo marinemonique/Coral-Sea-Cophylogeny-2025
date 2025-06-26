@@ -167,7 +167,7 @@ pal_df <- data.frame(names = names(palette), col = palette)
 
 ### Combining sequence/metadata 
 
-# Montipora
+## Loading Montipora Data
 
 ```{r}
 # Convert to long format
@@ -256,7 +256,7 @@ all_data_monti <- rbind(seqs_long_monti, profile_data_monti)
 ```
 
 
-# Isopora
+## Loading Isopora Data
 ```{r Isopora}
 # Convert to long format
 seqs_long_iso <- seqs_iso %>%
@@ -350,7 +350,7 @@ isopora_study_total <- all_data_iso %>%
 #9382894 sequences in isopora dataset
 ```
 
-# Acropora
+## Load Acropora Data
 
 ```{r Acropora}
 # Convert to long format
@@ -472,12 +472,12 @@ kdist_iso_symbioant <- fasta_iso_symbioant %>%
 ```
 
 ```{r}
-k_tree_iso_symbioant <- kdist_iso_symbioant %>% phangorn::upgma()
+#k_tree_iso_symbioant <- kdist_iso_symbioant %>% phangorn::upgma()
 
-k_tree_iso_symbioant
+#k_tree_iso_symbioant
 
 #save(k_tree_iso_symbioant, file = "kdist_iso_symbioant.RData")
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_Isopora_CS_2024/kdist_iso_symbioant.RData")
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_iso_symbioant.RData")
 ```
 
 ```{r}
@@ -512,14 +512,14 @@ iso_sample_order <- tree_iso_symbioant$data %>% filter(isTip == "TRUE") %>%
   pull(label)
 
 # Start plotting the composition data
-plot_df_iso_symbioant <- all_data %>%
+plot_df_iso_symbioant <- all_data_iso %>%
   mutate(sample_name = fct_relevel(sample_name, iso_sample_order))
 
 theme_set(theme_bw())
 
 
 # find the likely distinguishing seqs in here
-test_df <- seq_data %>%
+test_df <- seq_data_iso %>%
    group_by(name) %>%
    summarise(mean = mean(value_rel), n = n()) %>%
    arrange(desc(n), desc(mean))
@@ -529,7 +529,7 @@ test_df <- seq_data %>%
 # test_pal['C21ab'] <- "#000000" 
 ```
 
-## Fig 2B
+## Fig X
 ```{r}
 bar_uni_iso_symbioant <- 
 ggplot(plot_df_iso_symbioant, aes(sample_name, value_rel)) +
@@ -539,8 +539,8 @@ theme(aspect.ratio = 0.5, legend.position = "none", axis.text.y=element_blank(),
       axis.title.x = element_blank(), axis.title.y = element_blank(),
       panel.border = element_blank(), panel.grid.major = element_blank(),
 panel.grid.minor = element_blank(), axis.ticks = element_blank()) +
-scale_fill_manual(values = all_pal, breaks = levels(profile_data$name)) +
-scale_colour_manual(values = all_pal, breaks = levels(profile_data$name)) +
+scale_fill_manual(values = all_pal, breaks = levels(profile_data_iso$name)) +
+scale_colour_manual(values = all_pal, breaks = levels(profile_data_iso$name)) +
 geom_hline(yintercept = 1, size = 1) +
 guides(fill=guide_legend(ncol=2))
 
@@ -609,7 +609,7 @@ head(seqs_wide_monti)
 #k_unidist_monti <- GUniFrac(seqs_wide_monti, k_tree_monti)   #GUniFrac calculates all the distances 
 #k_unidist_monti <- k_unidist_monti$unifracs
 
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/k_unidist_monti.RData")
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/k_unidist_monti.RData")
 
  # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
 du_monti <- k_unidist_monti[, , "d_0.5"]   
@@ -628,14 +628,14 @@ monti_sample_order <- tree_monti$data %>% filter(isTip == "TRUE") %>%
   pull(label)
 
 # Start plotting the composition data
-plot_df_monti <- all_data %>%
+plot_df_monti <- all_data_monti %>%
   mutate(sample_name = fct_relevel(sample_name, monti_sample_order))
 
 theme_set(theme_bw())
 
 
 # find the likely distinguishing seqs in here
-test_df <- seq_data %>%
+test_df <- seq_data_monti %>%
    group_by(name) %>%
    summarise(mean = mean(value_rel), n = n()) %>%
    arrange(desc(n), desc(mean))
@@ -655,8 +655,8 @@ theme(aspect.ratio = 0.5, legend.position = "none", axis.text.y=element_blank(),
       axis.title.x = element_blank(), axis.title.y = element_blank(),
       panel.border = element_blank(), panel.grid.major = element_blank(),
 panel.grid.minor = element_blank(), axis.ticks = element_blank()) +
-scale_fill_manual(values = all_pal, breaks = levels(profile_data$name)) +
-scale_colour_manual(values = all_pal, breaks = levels(profile_data$name)) +
+scale_fill_manual(values = all_pal, breaks = levels(profile_data_monti$name)) +
+scale_colour_manual(values = all_pal, breaks = levels(profile_data_monti$name)) +
 geom_hline(yintercept = 1, size = 1) +
 guides(fill=guide_legend(ncol=2))
 
@@ -683,17 +683,124 @@ combined_plot_monti
 ```
 
 
-##2.1.3 Isopora distance matrix
+# 1.3 Acropora
 ```{r}
-
+seq_data_acro <- all_data_acro %>% 
+  filter(!str_detect(name, "non")) %>% 
+  filter(!str_detect(name, "p_"))
 ```
 
-##2.1.3 Montipora distance matrix
+Importing fasta sequences
 ```{r}
+fasta_acro_symbioant <- read_fasta_df("seqs.acro.fasta") %>% 
+   filter(label %in% seqs_long_acro$name) %>%   #only keeping DNA seqs that appear in seqs_long subset 
+  deframe() %>%
+  as_dna()
+```
 
+##1.3.1 Creating the tree
+```{r}
+#creating the tree
+kdist_acro_symbioant <- fasta_acro_symbioant %>%
+  dna_to_DNAbin() %>%
+  kdistance(k = 7, residues = "DNA", method = "edgar") %>%
+  as.matrix()
+```
+
+```{r}
+#k_tree_acro_symbioant <- kdist_acro_symbioant %>% phangorn::upgma()
+
+#k_tree_acro_symbioant
+
+#save(k_tree_acro_symbioant, file = "kdist_acro_symbioant.RData")
+load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_acropora_CS_2024/kdist_acro_symbioant.RData")
+```
+
+```{r}
+seqs_wide_acro_symbioant <- seq_data_acro %>%
+  dplyr::select(sample_name, name, value) %>%
+  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
+  tibble::column_to_rownames(var = "sample_name")
+
+head(seqs_wide_acro_symbioant)
+```
+
+###1.1.2. GUniFrac and Kdist Matrix
+```{r}
+k_unidist_acro_symbioant <- GUniFrac(seqs_wide_acro_symbioant, k_tree_acro_symbioant)   #GUniFrac calculates all the distances 
+k_unidist_acro_symbioant <- k_unidist_acro_symbioant$unifracs
+
+
+ # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
+du_acro_symbioant <- k_unidist_acro_symbioant[, , "d_0.5"]   
+dist_acro_symbioant <- as.dist(du_acro_symbioant, diag = FALSE)
+
+# Cluster the samples
+hclust_samps_acro_symbioant <- upgma(du_acro_symbioant)
+
+# Make the sample tree
+tree_acro_symbioant <- ggtree(hclust_samps_acro_symbioant, size = 0.2) +
+  theme(aspect.ratio = 0.3) + layout_dendrogram()
+
+# Get a sample order from ggtree
+acro_sample_order <- tree_acro_symbioant$data %>% filter(isTip == "TRUE") %>%
+  arrange(y) %>%
+  pull(label)
+
+# Start plotting the composition data
+plot_df_acro_symbioant <- all_data %>%
+  mutate(sample_name = fct_relevel(sample_name, acro_sample_order))
+
+theme_set(theme_bw())
+
+
+# find the likely distinguishing seqs in here
+test_df <- seq_data %>%
+   group_by(name) %>%
+   summarise(mean = mean(value_rel), n = n()) %>%
+   arrange(desc(n), desc(mean))
+
+# colour them black to check
+ test_pal <- all_pal
+# test_pal['C21ab'] <- "#000000" 
+```
+
+## Fig 2B
+```{r}
+bar_uni_acro_symbioant <- 
+ggplot(plot_df_acro_symbioant, aes(sample_name, value_rel)) +
+geom_bar(stat = "identity", aes(fill = name, colour = name)) +
+theme(aspect.ratio = 0.5, legend.position = "none", axis.text.y=element_blank(), axis.ticks.y = element_blank(),
+      axis.text.x=element_blank(), axis.ticks.x = element_blank(),
+      axis.title.x = element_blank(), axis.title.y = element_blank(),
+      panel.border = element_blank(), panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(), axis.ticks = element_blank()) +
+scale_fill_manual(values = all_pal, breaks = levels(profile_data$name)) +
+scale_colour_manual(values = all_pal, breaks = levels(profile_data$name)) +
+geom_hline(yintercept = 1, size = 1) +
+guides(fill=guide_legend(ncol=2))
+
+
+#p_bar_uni is the sequences by colour. P_tree_tip is the tree coloured by reef. 
+
+tree_acro_symbioant / bar_uni_acro_symbioant
 ```
 
 
+```{r}
+# Create reef strip
+reef_strip_acro <- ggplot(plot_df_acro_symbioant, aes(x = sample_name, y = 1, fill = Reef)) +
+  geom_tile() +
+  theme_void() +
+  theme(legend.position = "top") #+
+ # scale_fill_brewer(palette = "Set2")  # or use your own palette
+
+# Now combine the reef strip and your barplot
+combined_plot_acro <- reef_strip_acro / bar_uni_acro_symbioant + plot_layout(heights = c(0.1, 1))
+
+# Display it
+combined_plot_acro
+```
 
 
 # 2 PCoAs
