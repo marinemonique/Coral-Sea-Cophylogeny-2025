@@ -914,8 +914,6 @@ acroPCA
 # 3 Procrustes
 ## 3.1 Isopora
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_Isopora_CS_2024/Isopora/ind_coords_iso.RData")
-
 iso_seqs_host <- ind_coords_iso %>% 
   mutate("sample_name" = VialID)
 
@@ -943,7 +941,7 @@ shared_seqs_iso <- shared_seqs_iso %>%
 ### 3.1.1 Host tree
 
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_Isopora_CS_2024/Isopora/iso_gen.RData") #load host data
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/iso_gen.RData") #load host data
 
 library(adegenet) #install required package
 library(poppr)
@@ -977,7 +975,6 @@ load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_iso_symbioa
 
 k_unidist_symbioant <- GUniFrac(seqs_wide_symbioant, k_tree_iso_symbioant)   #GUniFrac calculates all the distances 
 k_unidist_symbioant <- k_unidist_symbioant$unifracs
-
 
  # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
 du_iso_symbioant <- k_unidist_symbioant[, , "d_0.5"]   
@@ -1018,7 +1015,7 @@ dim(H.dist_iso)
 ```{r, include = FALSE}
 # Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont. 
 
-paco.iso <- procrustes(H.dist, P.dist, symmetric = FALSE)
+paco.iso <- procrustes(H.dist_iso, P.dist_iso, symmetric = FALSE)
 summary(paco.iso)
 
 #symmetric = FALSE: This specifies that the Procrustes rotation can be non-orthogonal (i.e. generalised), meaning that it can include scaling and shearing transformations in addition to rotation and reflection. This allows for more flexible alignment between the two dissimilarity matrices, but may result in a less interpretable or meaningful alignment depending on the nature of the data.
@@ -1170,7 +1167,7 @@ dim(H.dist_monti)
 ```{r, include = FALSE}
 # Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont. 
 
-paco.monti <- procrustes(H.dist, P.dist, symmetric = FALSE)
+paco.monti <- procrustes(H.dist_monti, P.dist_monti, symmetric = FALSE)
 summary(paco.monti)
 
 #symmetric = FALSE: This specifies that the Procrustes rotation can be non-orthogonal (i.e. generalised), meaning that it can include scaling and shearing transformations in addition to rotation and reflection. This allows for more flexible alignment between the two dissimilarity matrices, but may result in a less interpretable or meaningful alignment depending on the nature of the data.
@@ -1184,16 +1181,7 @@ plot(paco.monti, kind = 1, type = "text")
 plot(paco.monti, kind = 2, type = "text")
 ```
 
-Number of objects: 186    Number of dimensions: 186 
 
-Procrustes sum of squares:  
- 1.563793e+07 
-Procrustes root mean squared error: 
- 289.9567 
-Quantiles of Procrustes errors:
-     Min       1Q   Median       3Q      Max 
-166.5647 262.5309 276.9388 319.7066 392.3467
-*sum of squares here is ridiculous (over 1 million)*
 
 ### 3.2.4 montipora procrustes plot
 
@@ -1246,7 +1234,7 @@ shared_seqs_acro <- shared_seqs_acro %>%
 ### 3.3.1 Host tree
 
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_acropora_CS_2024/acropora/acro_gen.RData") #load host data
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/acro_gen.RData") #load host data
 
 library(adegenet) #install required package
 library(poppr)
@@ -1321,7 +1309,7 @@ dim(H.dist_acro)
 ```{r, include = FALSE}
 # Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont. 
 
-paco.acro <- procrustes(H.dist, P.dist, symmetric = FALSE)
+paco.acro <- procrustes(H.dist_acro, P.dist_acro, symmetric = FALSE)
 summary(paco.acro)
 
 #symmetric = FALSE: This specifies that the Procrustes rotation can be non-orthogonal (i.e. generalised), meaning that it can include scaling and shearing transformations in addition to rotation and reflection. This allows for more flexible alignment between the two dissimilarity matrices, but may result in a less interpretable or meaningful alignment depending on the nature of the data.
@@ -1335,16 +1323,7 @@ plot(paco.acro, kind = 1, type = "text")
 plot(paco.acro, kind = 2, type = "text")
 ```
 
-Number of objects: 186    Number of dimensions: 186 
 
-Procrustes sum of squares:  
- 1.563793e+07 
-Procrustes root mean squared error: 
- 289.9567 
-Quantiles of Procrustes errors:
-     Min       1Q   Median       3Q      Max 
-166.5647 262.5309 276.9388 319.7066 392.3467
-*sum of squares here is ridiculous (over 1 million)*
 
 ### 3.1.4 acropora procrustes plot
 
