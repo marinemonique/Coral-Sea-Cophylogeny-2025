@@ -816,1642 +816,203 @@ reef_order <- meta %>% rename(`GPS S` = "Lat") %>%
   summarise(Lat = mean(Lat)) %>%
   arrange(Lat) %>%
   pull(Reef)
-
 ```
 
-
-
-###4.1.3 Acro Reef PCoA
 ```{r}
-pcoa_acro <- cmdscale(dist_acro, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
+pcoa_iso <- cmdscale(dist_iso_symbioant, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
 
-outlier_samples <- c("A ten 298", "A ten 303", "A ten 302", "A ten 231", "A ten 225", "A ten 295", "A ten 223", "A ten 012")
+#outlier_samples <- XX
 
-ordiplot(pcoa_acro, display = 'sites', type = 'text')
-barplot (pcoa_acro$eig, names = paste ('PCoA', 1:260), las = 3, ylab = 'eigenvalues')
+ordiplot(pcoa_iso, display = 'sites', type = 'text')
+barplot (pcoa_iso$eig, names = paste ('PCoA', 1:187), las = 5, ylab = 'eigenvalues') #invalid value specified for graphical parameter "las"
 
 # Custom x and y labels
-xlab = paste("Axis 1 (5.0%)")
-ylab = paste("Axis 2 (2.1%)")
+xlab = paste("Axis 1 (X%)")
+ylab = paste("Axis 2 (X%)")
 
-MDSxy.acro <- data.frame(pcoa_acro$points) %>% 
-  rownames_to_column(var = "Vial") %>% 
-  left_join(., meta) %>% 
-   mutate(catBleaching = as.factor(catBleaching)) %>% 
-  filter(!(Vial %in% outlier_samples)) 
+MDSxy.iso <- data.frame(pcoa_iso$points) %>% 
+  rownames_to_column(var = "sample_name") %>% 
+  left_join(., meta_iso)# %>% 
+ #  mutate(catBleaching = as.factor(catBleaching)) %>% 
+ # filter(!(Vial %in% outlier_samples)) 
 
-acroPCA <- MDSxy.acro %>%
-  mutate(Reef = fct_relevel(Reef, reef_order)) %>%
+isoPCA <- MDSxy.iso %>%
+  filter(Reef != "NA") %>% 
+ # mutate(Reef = fct_relevel(Reef, reef_order)) %>%
   ggplot(aes(X1, X2, fill = Reef)) + 
   geom_point(alpha = 1, shape = 21, size = 3) + 
-  scale_fill_viridis_d(option = "magma", direction = -1) 
- # scale_fill_manual(values = reef_pal) #+
- #theme(legend.position = "none", aspect.ratio = 1, text = element_text(size = 15))
+  scale_fill_viridis_d(option = "magma", direction = -1)+ 
+#  scale_fill_manual(values = reef_pal) #+
+ theme(legend.position = "none", aspect.ratio = 1, text = element_text(size = 15))
 
-acroPCA
+isoPCA
 ```
 
 
+# 3 Procrustes
+## 3.1 Isopora
 ```{r}
-# Extract the eigenvalues
-eigenvalues <- pcoa_acro$eig
+load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_Isopora_CS_2024/Isopora/ind_coords_iso.RData")
 
-# Variance explained by the first PC
-variance_explained_by_PC1 <- eigenvalues[1]
-
-# Variance explained by the second PC
-variance_explained_by_PC2 <- eigenvalues[2]
-
-# Print the results
-cat("Variance explained by the first PC: ", variance_explained_by_PC1, "\n")
-cat("Variance explained by the second PC: ", variance_explained_by_PC2, "\n")
-```
-
-
-
-### Fig SX PCoA Reef
-```{r}
-pverPCA + pmh8PCA + acroPCA
-```
-
-
-## 4.2 PCoA by Bleaching
-
-###4.2.1 Isopora Bleaching PCA
-```{r}
-library("RColorBrewer")
-my_colors <- c("#F5F5F5", "#F6E8C3", "#DFC27D", "#BF812D", "#8C510A", "#543005")
-
-
-MDSxy.pver.b <- data.frame(pcoa_pver$points) %>% 
-  rownames_to_column(var = "Vial") %>% 
-  left_join(., meta) %>% 
-      mutate(catBleaching = as.factor(catBleaching))
-
-
-pverPCA.b <- MDSxy.pver.b %>%
-  ggplot(aes(X1, X2, fill = catBleaching)) + 
-  geom_point(alpha = 1, shape = 21, size = 3) +
-  scale_fill_manual(values = my_colors) +
-    theme(legend.position = "none") 
-
-pverPCA.b
-```
-
-###4.2.2 Montipora Bleaching PCA
-```{r}
-MDSxy.pmh8.b <- data.frame(pcoa_pmh8$points) %>% 
-  rownames_to_column(var = "Vial") %>% 
-  left_join(., meta) %>% 
-      mutate(catBleaching = as.factor(catBleaching))
-
-pmh8PCA.b <- MDSxy.pmh8.b %>%
-  ggplot(aes(X1, X2, fill = catBleaching)) + 
-  geom_point(alpha = 1, shape = 21, size = 3) +
-  scale_fill_manual(values = my_colors) +
-  theme(legend.position = "none") 
-
-pmh8PCA.b
-```
-
-###4.2.3 Acro Bleaching PCA
-```{r}
-pcoa_acro.b <- cmdscale(dist_acro, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
-outlier_samples <- c("A ten 298", "A ten 303", "A ten 302", "A ten 231", "A ten 225", "A ten 295", "A ten 223", "A ten 012")
-
-MDSxy.acro.b <- data.frame(pcoa_acro.b$points) %>% 
-  rownames_to_column(var = "Vial") %>% 
-  left_join(., meta) %>% 
-   mutate(catBleaching = as.factor(catBleaching)) %>% 
-  filter(!(Vial %in% outlier_samples)) 
-
-acroPCA.b <- MDSxy.acro.b %>%
-  ggplot(aes(X1, X2, fill = catBleaching)) + 
-  geom_point(alpha = 1, shape = 21, size = 3) +
-  theme(legend.position = "right", aspect.ratio = 1, text = element_text(size = 10)) +
-     scale_fill_manual(values = my_colors)
-
-acroPCA.b
-```
-
-### Fig SX PCA Bleaching 
-```{r}
-#final figure for bleaching category PCoA 
-PCA_bleach <- pverPCA.b + pmh8PCA.b + acroPCA.b 
-PCA_bleach
-```
-
-
-
-## 4.3 PCoA by Admixture
-**Here we are looking at the host genetic clustering (admixture proportion) and whether this structures the symbiont communities for each species** 
-
-### 4.3.1 Pver Admixture PCoA
-```{r}
-##Looking at whether cluster from dartseq is important factor in symbiont communities in pver. Note we did not sequence haplotype 8a 
-load("HostAdmix/qlong.admix.pver.RData")
-
-qlong.admix.pver <- qlong.admix.pver %>% 
-  mutate(Ind = as.factor(Ind)) %>% 
-   dplyr::rename(Vial = Ind)
-
-
-MDS.admix.pver <- MDSxy.pver.b %>% left_join(qlong.admix.pver)
-
-pver.admixPCA <- MDS.admix.pver %>%
-  ggplot(aes(X1, X2, fill = value)) + 
-  geom_point(alpha = 1, shape = 21, size = 3) +
-      scale_fill_distiller(palette = "YlOrRd") +
-  theme(legend.position = "none") +
-      theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank())
- #theme(legend.position = "right", aspect.ratio = 1, text = element_text(size = 15))      
-pver.admixPCA 
-```
-
-### 4.3.2 Pmea Admixture PCoA
-```{r}
-##Looking at whether cluster from dartseq is important factor in symbiont communities in pver. Note we did not sequence haplotype 8a 
-load("HostAdmix/qlong.admix.pmea.RData")
-
-qlong.admix.pmea <- qlong.admix.pmea %>% 
-  mutate(Ind = as.factor(Ind)) %>% 
-   dplyr::rename(Vial = Ind)
-
-
-MDS.admix.pmea <- MDSxy.pmh8 %>% left_join(qlong.admix.pmea)
-
-pmea.admixPCA <- MDS.admix.pmea %>%
-  ggplot(aes(X1, X2, fill = value)) + 
-  geom_point(alpha = 1, shape = 21, size = 3) +
-      scale_fill_distiller(palette = "YlOrRd") +
-  theme(legend.position = "none") +
-      theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank())
- #theme(legend.position = "right", aspect.ratio = 1, text = element_text(size = 15))      
-pmea.admixPCA 
-```
-
-### 4.3.3 Acro Admixture PCoA
-```{r}
-#looking only at Cluster 3 of Acropora humilis - there were 3 distinct clusters found which correlate to the 3 different morphotypes. 
-
-load("HostAdmix/qlong.admix.acroC3.RData")
-
-qlong.admix.acroC3 <- qlong.admix.acroC3 %>% 
-  mutate(Ind = as.factor(Ind)) %>% 
-   dplyr::rename(Vial = Ind)
-
-
-MDS.admix.acroC3 <- MDSxy.acro.b %>% left_join(qlong.admix.acroC3)
-
-acro.admixPCA.C3 <- MDS.admix.acroC3 %>%
-  ggplot(aes(X1, X2, fill = value)) + 
-  geom_point(alpha = 1, shape = 21, size = 3) +
-    scale_fill_distiller(palette = "YlOrRd") +
-   theme(legend.position = "right", aspect.ratio = 1, text = element_text(size = 15)) +
-    theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank())
-  
-acro.admixPCA.C3 
-```
-
-### Admixture figure 
-```{r}
-#this shows how symbiont communities are structured by admixture, for each of the three host species. 
-PCA_admix <- pver.admixPCA  + pmea.admixPCA + acro.admixPCA.C3
-PCA_admix
-```
-
-## 4.4 PCoA haplotype (Pmea)
-```{r}
-#this shows that there is no effect of haplotype 8a/ p. meandrina on symbiont communities, but we do see admixture clusters of P. meandrina are more important. 
-MDSxy.pmh8.b <- data.frame(pcoa_pmh8$points) %>% 
-  rownames_to_column(var = "Vial") %>% 
-  left_join(., meta) 
-
-
-pmh8PCA.b <- MDSxy.pmh8.b %>%
-  ggplot(aes(X1, X2, fill = mtORF)) + 
-  geom_point(alpha = 1, shape = 21, size = 3) +
-        scale_fill_brewer(palette = "Spectral") +
- theme(legend.position = "right", aspect.ratio = 1, text = element_text(size = 15))
-
-
-pmh8PCA.b
-```
-
-
-# 5 dbRDA 
-**Here, we test UniFrac distances with environmental co-variates using distance-based RDA. We will use individual-based variables (depth, bleaching condition, and host genotype), biogeographic variable (latitude), DHW at time of collection (current disturbance)DHW 2020), and a long-term disturbance variable (max DHW 1986 - 2020)** 
-
-```{r}
-#first we need to add in kd490 (light attenuation) as per reviewer comments, so not in the initial metadata 
-symbiont.light = read.csv("symbiont.light.csv") 
-symbiont.light <- symbiont.light %>% dplyr::select(c(Aggregated.Date.Time, Variable, Depth, Site.Name, Latitude, Longitude, mean)) %>% 
-  mutate(Variable = as.factor(Variable))
-
-symbiont.light %>% pivot_wider(names_from = Variable, values_from = mean)
-
-
-averaged_data <- symbiont.light %>%
-  group_by(Site.Name, Aggregated.Date.Time, Depth, Variable) %>%
-  summarize(mean_value = mean(mean)) %>%
-  group_by(Site.Name, Variable) %>%
-  summarize(mean_by_variable = mean(mean_value)) %>%
-  pivot_wider(names_from = Variable, values_from = mean_by_variable) %>%
-  ungroup()
-
-light.data <- averaged_data %>% dplyr::select(c(Site.Name, Chl_a_sum, Kd_490)) %>% 
-  mutate(Reef = as.factor(Site.Name)) %>% 
-  dplyr::select(c(Reef,Kd_490))
-
-```
-
-## 5.1 Pver dbRDA
-```{r}
-
-```
-
-```{r}
-
-```
-
-
-
-## 5.2 Pmea dbRDA
-```{r}
-#importing unifrac distances for analysis 
-meta_pmh8 <- meta %>%
-    left_join(., light.data) %>% 
-  filter(mtORF == "Pmeandrina" | mtORF == "Haplotype8a") %>%
-  filter(sample_name %in% keepers_ss$sample_name) %>%
-  mutate(catBleaching = as.numeric(catBleaching)) %>%
-  tibble::column_to_rownames(var = "Vial") %>%
-  mutate(Vial = rownames(.))
-
-
-#save(meta_pmh8, file = "meta_pmh8.RData")
-
-
-dist_pmh8_ordered <- as.dist(as.matrix(dist_pmh8)[rownames(meta_pmh8), rownames(meta_pmh8)])
-
-# Make a correlation matrix of numeric variables
-cm <- cor(meta_pmh8 %>% dplyr::select(Depth, maxDHW, MMM, DHW2020, Lat, Long))
-
-#check correlations visually 
-corrplot(cm) 
-cm %>% cor()
-
-# Check the vif scores of the full model
-ord_pmh8_full <- dbrda(dist_pmh8_ordered ~ Lat + Long + MMM + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta_pmh8)
-
-sort(vif.cca(ord_pmh8_full)) 
-#catBleaching        Depth       maxDHW      DHW2020         Long          Lat          MMM 
-   # 1.123412     1.246164     2.469619     5.601568    19.690299    20.097697    28.867819 
-
-# Reduce the model (consult the corplot and vif scores). We will omit Long and MMM, and latitude will reflect overall biogeographic patterns 
-ord_pmh8 <- dbrda(dist_pmh8_ordered ~ Lat + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta_pmh8)
-
-sort(vif.cca(ord_pmh8)) 
-
-#catBleaching        Depth       maxDHW       Kd_490      DHW2020          Lat 
-   # 1.118488     1.240862     1.581147     1.869206     5.144462     6.590704 
-
-# Use ordistep to run a backward stepwise model. This will reduce the model to the most significant parameters 
-os_pmh8_backward <- ordistep(ord_pmh8, direction = "backward", permutations = 999)
-anova(os_pmh8_backward, by = 'margin')
-
-#Model: dbrda(formula = dist_pmh8_ordered ~ Lat + catBleaching + maxDHW + Kd_490, data = meta_pmh8)
-    #         Df SumOfSqs       F Pr(>F)    
-#Lat            1   0.1981  8.5613  0.001 ***
-#catBleaching   1   0.2376 10.2683  0.001 ***
-#maxDHW         1   0.1141  4.9306  0.003 ** 
-#Kd_490         1   0.0589  2.5470  0.058 .  
-#Residual     167   3.8637                   7               
-
-summary(ord_pmh8)
-
-
-R2adj <- RsquareAdj(ord_pmh8)$adj.r.squared
-R2adj 
-#[1] 0.1888987
-
-#variance partitioning to see how much variation is explained by each factor 
-varp <- varpart(dist_pmh8_ordered, ~Lat, ~catBleaching, ~maxDHW, data = meta_pmh8)
-plot(varp, digits = 2, Xnames = c("Lat", "catBleaching", "maxDHW"), bg = c("navy", "tomato", "green"))
-
-#extract dbRDA scores
-pmh8_scores <- as.data.frame(scores(os_pmh8_backward, display = "sites")) %>%
-  tibble::rownames_to_column(var = "Vial") %>%
-  left_join(., meta_pmh8)
-
-#extract dbRDA vectors
-pmh8_vectors <- as.data.frame(os_pmh8_backward$CCA$biplot) %>%
-  tibble::rownames_to_column(var = "factors")
-
-#produce dbRDA plot 
-pmh8_fullrda <- pmh8_scores %>%
-  mutate(Reef = fct_relevel(Reef, reef_order)) %>%
-    ggplot(aes(x = dbRDA1, y = dbRDA2)) +
-      geom_point(aes(fill = Lat), size = 3, shape = 21) +
-      geom_label_repel(data = pmh8_vectors, aes(x = dbRDA1, y = dbRDA2, label = factors), box.padding = 0.75, size = 4, segment.colour = NA) +
-      geom_segment(data = pmh8_vectors, aes(x = 0, xend = dbRDA1, y = 0, yend = dbRDA2), 
-      size = 0.5, arrow = arrow(length = unit(0.5, "cm")), colour = "royalblue2") +
-      scale_fill_viridis_c(option = "magma", direction = -1) +
-  theme(aspect.ratio = 1, text = element_text(size = 15)) +
-  theme(legend.position = "none") +
-  theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank())
-
-
-pmh8_fullrda
-```
-
-## 5.3 Acro dbRDA
-```{r}
-#list outlier samples
-outlier_samples <- c("Plate6_D012", "Plate6_E009", "Plate6_H011", "Plate6_B012", "Plate7_D006", "Plate6_G009", "Plate7_H009", "Plate7_A010", "Plate6_D011")
-
-#importing unifrac distances for analysis 
-meta_acro <- meta %>%
-      left_join(., light.data) %>% 
-  filter(mtORF == "Ahumilis") %>%
-  filter(sample_name %in% keepers_ss$sample_name) %>%
-  filter(!(sample_name %in% outlier_samples)) %>%
-  tibble::column_to_rownames(var = "Vial") %>%
-  mutate(Vial = rownames(.))
-
-#save(meta_acro, file = "meta_acro.RData")
-
-
-#combine Unifrac distances with enviro. data.
-dist_acro_ordered <-  as.dist(as.matrix(dist_acro)[rownames(meta_acro), rownames(meta_acro)])
-
-# Make a correlation matrix of numeric variables
-cm <- cor(meta_acro %>% dplyr::select(Depth, maxDHW, MMM, DHW2020, Lat, Long))
-
-#check correlations visually 
-corrplot(cm) 
-cm %>% cor()
-
-# Check the vif scores of the full model
-ord_acro_full <- dbrda(dist_acro_ordered ~ Lat + Long + MMM + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta_acro)
-
-sort(vif.cca(ord_acro_full)) 
-#catBleaching        Depth       maxDHW      DHW2020         Long          Lat          MMM 
-  #  1.275608     1.291015     2.334278     3.436693    15.066787    28.331807    47.078976 
-
-# Reduce the model (consult the corplot and vif scores). We will omit Long and MMM, and latitude will reflect overall biogeographic patterns 
-ord_acro <- dbrda(dist_acro_ordered ~ Lat + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta_acro)
-
-sort(vif.cca(ord_acro)) 
-     #  Depth catBleaching       maxDHW      DHW2020          Lat 
-    #1.189509     1.242132     1.677445     3.409606     3.756585 
-
-# Use ordistep to run a backward stepwise model. This will reduce the model to the most significant parameters 
-os_acro_backward <- ordistep(ord_acro, direction = "backward", permutations = 999)
-anova(os_acro_backward, by = 'margin')
-
-# Model: dbrda(formula = dist_acro_ordered ~ Lat + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta_acro)
-  #            Df SumOfSqs       F Pr(>F)    
-#Lat            1   0.2633  6.0124  0.001 ** 
-#Depth          1   0.1180  2.6937  0.021 *  
-#catBleaching   1   0.1001  2.2849  0.042 *  
-#DHW2020        1   0.3343  7.6335  0.001 ***
-#maxDHW         1   0.6725 15.3567  0.001 ***
-#Kd_490         1   0.3074  7.0199  0.001 ***
-#Residual     253  11.0795                   
-
-summary(ord_acro)
-
-R2adj <- RsquareAdj(ord_acro)$adj.r.squared
-R2adj 
-#[1] 0.1608562
-
-#variance partitioning to see how much variation is explained by each factor 
-varp <- varpart(dist_acro_ordered, ~Lat, ~Kd_490, ~DHW2020, ~maxDHW, data = meta_acro)
-plot(varp, digits = 2, Xnames = c("Lat", "KD 490", "DHW2020", "maxDHW"), bg = c("navy", "tomato", "green", "yellow"))
-
-#extract dbRDA scores
-acro_scores <- as.data.frame(scores(os_acro_backward, display = "sites")) %>%
-  tibble::rownames_to_column(var = "Vial") %>%
-  left_join(., meta_acro)
-
-#extract dbRDA vectors
-acro_vectors <- as.data.frame(os_acro_backward$CCA$biplot) %>%
-  tibble::rownames_to_column(var = "factors")
-
-#produce dbRDA plot 
-acro_fullrda <- acro_scores %>%
-  mutate(Reef = fct_relevel(Reef, reef_order)) %>%
-    ggplot(aes(x = dbRDA1, y = dbRDA2)) +
-      geom_point(aes(fill = Lat), size = 3, shape = 21) +
-      geom_label_repel(data = acro_vectors, aes(x = dbRDA1, y = dbRDA2, label = factors), box.padding = 0.75, size = 4, segment.colour = NA) +
-      geom_segment(data = acro_vectors, aes(x = 0, xend = dbRDA1, y = 0, yend = dbRDA2), 
-      size = 0.5, arrow = arrow(length = unit(0.5, "cm")), colour = "royalblue2") +
-        theme(aspect.ratio = 1, text = element_text(size = 15)) +
-      scale_fill_viridis_c(option = "magma", direction = -1, guide = guide_colorbar(reverse = TRUE)) +
-     theme(legend.position = "right") +
-  theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank()) 
-     #edit legends
-
-
-acro_fullrda
-```
-
-
-```{r}
-snp.acro <- meta %>%
-  filter(mtORF == "Ahumilis") %>%
-  filter(sample_name %in% keepers_ss$sample_name) %>%
- # filter(!(sample_name %in% outlier_samples)) %>%
- # tibble::column_to_rownames(var = "Vial") 
-  dplyr::select(Vial, Reef, Site, catBleaching, Depth, DHW2020)
-
-save(snp.acro, file = "snp.acro.RData")
-```
-
-
-## Fig 4 dbRDA
-```{r}
-dbrda <- pmh8_fullrda + pver_fullrda + acro_fullrda 
-dbrda
-
-```
-
-
-# 6 Procrustes Rotation
-
-### Load Data
-```{r}
-load("clean_data.RData")
-
-seq_data <- clean_data %>% 
-  filter(!str_detect(name, "non")) %>% 
-  filter(!str_detect(name, "p_"))
-  
-#creating an object for each species 
-poci_seqs.b <- seq_data %>% filter(coral_genus == "Pocillopora")
-pver_seqs.b <- seq_data %>% filter(str_detect(mtORF, "Pverrucosa"))
-pmh8_seqs.b <- seq_data %>% filter(str_detect(mtORF, "Pmeandrina|Haplotype8a"))
-acro_seqs.b <- seq_data %>% filter(str_detect(mtORF, "Ahumilis"))
+iso_seqs_host <- ind_coords_iso %>% 
+  mutate("sample_name" = VialID)
 
 #code for defining specific colours per reef for procrustes plots later on
-reef_pal2 <- c("#ac1917", "#e54a50", "#b75420", "#ea8553", "#c0982b", "#eec76b", "#768b45", "#a9be77", "#B2DFDB", "#6fb293", "#4eaaa6","#1c7873", "#00798C")
+reef_pal2 <- c("#ac1917", "#e54a50", "#b75420", "#ea8553", "#c0982b", "#eec76b", "#768b45", "#a9be77", "#B2DFDB", "#4eaaa6", "#00798C")
 
-reef_names <- c("Osprey", "Bougainville", "Moore", "Willis", "Holmes", "Chilcott", "Herald","Lihou", "Flinders", "Marion", "Frederick", "Saumarez", "Wreck")
+reef_names <- c("Elizabeth", "Middleton", "Cato", "Wreck", "Kenn", "Mellish", "Marion","Frederick", "Saumarez", "Madgelaine", "NA")
 
 names(reef_pal2) <- reef_names
 ```
 
 ```{r}
-clust_names <- c("Cluster 1", "Cluster 2", "Cluster 3")
-clust_pal <- c("#CB409D", "#FF983B", "#FE4E4E")
-names(clust_pal) <- clust_names
+#here is the subset with the data that matches the host data
+shared_seqs_iso <- inner_join(iso_seqs_host, seq_data_iso, by = "sample_name")
+
+seq_data_iso %>% 
+  distinct(sample_name) %>% 
+  nrow()
+ #should be 187 in the symbioant
+
+shared_seqs_iso <- shared_seqs_iso %>% 
+  select(sample_name)
 ```
+
+Host tree
+
+```{r}
+load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_Isopora_CS_2024/Isopora/iso_gen.RData") #load host data
+
+library(adegenet) #install required package
+library(poppr)
+
+
+# Check your individual names in iso_gen
+ind_names_host_iso <- indNames(iso_gen)
+
+# Subset the genind object to retain only matching individuals
+iso_gen_subset <- iso_gen[ind_names_host %in% shared_seqs_iso$sample_name, ]
+
+length(indNames(iso_gen))          # Before 189
+length(indNames(iso_gen_subset))   # After 188
+
+#Compute the pairwise distances between multivariate observations; used on raw allele frequencies.
+host_shared_dist <- dist(iso_gen_subset, method = "euclidean") #calculate euclidean distance 
+
+# convert the distance matrix to a dist object
+host_dist_matrix <- as.dist(host_shared_dist)
+
+#Create a matrix with only common sample names for symbioant
+seqs_wide_symbioant <- seq_data_iso %>%
+  select(sample_name, name, value) %>%
+  filter(sample_name %in% shared_seqs_iso$sample_name) %>% 
+  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
+  tibble::column_to_rownames(var = "sample_name") #187 samples
+
+#k_tree_iso_symbioant <- kdist_iso_symbioant %>% phangorn::upgma()
+
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_iso_symbioant.RData")
+
+k_unidist_symbioant <- GUniFrac(seqs_wide_symbioant, k_tree_iso_symbioant)   #GUniFrac calculates all the distances 
+k_unidist_symbioant <- k_unidist_symbioant$unifracs
+
+
+ # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
+du_iso_symbioant <- k_unidist_symbioant[, , "d_0.5"]   
+dist_iso_symbioant <- as.dist(du_iso_symbioant, diag = FALSE)
+```
+
+# Symbioant Tree 
 
 
 ```{r}
-kid_names <- c("C3A", "C3B")
-kid_pal <- c("#CB409D", "#FF983B")
-names(kid_pal) <- kid_names
+#convert host (H) and symbiont (P) distance trees as data matrices
+H.dist_iso <- host_dist_matrix %>% as.matrix()
+P.dist_iso <- dist_iso_symbioant %>% as.matrix() 
 ```
 
-## Load Metadata
 ```{r}
-meta = read.csv("Metadata.csv") %>% 
-  mutate(sample_name = as.factor(sample_name))
-
-```
-
-
-## Load Kgroup clustering for symbiont genetics
-```{r}
-poci_dend <- as.dendrogram(hclust_samps_poci)
-poci_dend <- color_branches(poci_dend, k = 10, col = ggsci::pal_d3(palette = "category10"))
-plot(poci_dend)
-
-poci_k <- data.frame(Vial = labels(poci_dend),
-                     k = dendextend::get_leaves_branches_col(poci_dend)) %>%
-  mutate(k_id = case_when(k == "#2CA02CFF" ~ "ClatN",
-                          k == "#9467BDFF" ~ "ClatS",
-                          k == "#8C564BFF" ~ "Cpac",
-                          TRUE ~ "outliers")) %>%
-  filter(k_id != "outliers") %>%
-  left_join(., meta) %>%
-  dplyr::select(Vial, k_id, k, Reef, Lat, Long, mtORF)
-
-acro_dend <- as.dendrogram(hclust_samps_acro)
-acro_dend <- color_branches(acro_dend, k = 10, col = ggsci::pal_d3(palette = "category10"))
-plot(acro_dend)
-
-acro_k <- data.frame(Vial = labels(acro_dend),
-                     k = dendextend::get_leaves_branches_col(acro_dend)) %>%
-  mutate(k_id = case_when(k == "#D62728FF" ~ "C3A",
-                          k == "#9467BDFF" ~ "C3B",
-                          TRUE ~ "outliers")) %>%
-  filter(k_id != "outliers") %>%
-  left_join(., meta) %>%
-  dplyr::select(Vial, k_id, k, Reef, Lat, Long, mtORF)
-
-k_map <- rbind(poci_k, acro_k)
-```
-
-
-## 6.1 P. meandrina Procrustes 
-```{r}
-
-```
-
-### 6.1.1 P.meandrina  Tree
-```{r}
-
-
-```
-
-
-### 6.1.2 Subset H and P matrices
-```{r, include = FALSE}
-library(vegan)
-
-#convert host (H) and symbiont (P) distance trees as data matrices 
-H.dist <- dart.pmea.tree %>% as.matrix()
-P.dist <- dist_pmh8.b %>% as.matrix()
-
 #must have same number of dimensions 
-dim(H.dist)
-dim(P.dist)
+dim(H.dist_iso)
+dim(P.dist_iso) #its really odd that the symbioant has 186 when the code running above has 187 sample names
 
 # Subset to only the samples that are in both datasets
-intersect_samples <- intersect(rownames(H.dist), rownames(P.dist))
-P.dist_intersect <- P.dist[intersect_samples, ]
-H.dist_intersect <- H.dist[intersect_samples, ]
-
-# Check that the samples are now aligned
-all(rownames(H.dist_intersect) == rownames(P.dist_intersect))
-
-#re-check dimensions
-dim(H.dist_intersect)
-dim(P.dist_intersect)
-
-#where is the issue with one extra in H dist? 
-setdiff(rownames(H.dist_intersect), rownames(P.dist_intersect))
-setdiff(colnames(H.dist_intersect), colnames(P.dist_intersect))
-
-# Identify the column that is missing in P.dist_intersect
-missing_col <- setdiff(colnames(H.dist_intersect), colnames(P.dist_intersect))
-
-# Remove the missing column from H.dist_intersect
-H.dist_intersect_complete <- H.dist_intersect[, !colnames(H.dist_intersect) %in% missing_col]
+intersect_samples_row_iso <- intersect(rownames(H.dist_iso), rownames(P.dist_iso))
+intersect_samples_col_iso <- intersect(colnames(H.dist_iso), colnames(P.dist_iso)) # The host data set had 189, and the symbioant had 186
+P.dist_intersect_iso <- P.dist[intersect_samples_row_iso, intersect_samples_col_iso]
+H.dist_intersect_iso <- H.dist[intersect_samples_row_iso, intersect_samples_col_iso ]
 
 # Subset to only the samples that are in both datasets
-intersect_samples <- intersect(rownames(H.dist_intersect_complete), rownames(P.dist_intersect))
-P.dist <- P.dist_intersect[intersect_samples, ]
-H.dist <- H.dist_intersect_complete[intersect_samples, ]
+intersect_samples_iso <- intersect(rownames(H.dist_intersect_iso), rownames(P.dist_intersect_iso))
+P.dist_iso <- P.dist_intersect_iso
+H.dist_iso <- H.dist_intersect_iso
 
 #recheck dimensions - all good 
-dim(P.dist)
-dim(H.dist)
+dim(P.dist_iso)
+dim(H.dist_iso)
 ```
 
+### Perform Paco analysis
 
-###6.1.3 Perform Paco analysis
 ```{r, include = FALSE}
 # Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont. 
 
-```
-
-
-###6.1.4 P. mea procrustes plot
-```{r}
-#transfer PC coords into dataframe for plotting  
-
-
-
-#filter metadata to just reef
-
-
-#left join the metadata to get reef into the dataframe 
-
-
-#create plot 
-
-
-```
-
-###6.1.5 Test significance 
-```{r}
-#testing significance 
-protest(X = H.dist, Y = P.dist, scores = "sites", permutations = 999)
-```
-
-
-
-
-# 6.2 P. verrucosa Procrustes 
-```{r}
-
-
-#now must filter fasta files to correspond to samples in seqs_long subset 
-
-
-
-#creating the subset symbiont tree
-
-
-#as a distance matrix
-
-
-#creating the tree
-
-
-#subsetting the metadata
-
-
-#creating unifrac distance matrix and tree 
-  #GUniFrac calculates all the distances 
-
-
-#GUniFrac with alpha 0.5
-
-```
-
-
-### 6.2.1 P.verrucosa  Tree
-```{r}
-load("HostAdmix/gl3.csmp.pver.RData")
-
-library(adegenet)
-
-# calculate a distance matrix
-dist_matrix_pver <- gl.dist.ind(gl3.csmp.pver, method = "euclidean", scale = TRUE)
-# convert the distance matrix to a dist object
-dart.pver.tree <- as.dist(dist_matrix_pver)
-
-```
-
-
-###6.2.2 Subset H and P matrices
-```{r}
-library(vegan)
-
-#convert host (H) and symbiont (P) distance trees as data matrices 
-H.dist.pver <- dart.pver.tree %>% as.matrix()
-P.dist.pver <- dist_pver.b %>% as.matrix()
-
-#must have same number of dimensions 
-dim(H.dist.pver)
-dim(P.dist.pver)
-
-# Subset to only the samples that are in both datasets
-intersect_samples.pver <- intersect(rownames(H.dist.pver), rownames(P.dist.pver))
-P.dist_intersect.pver <- P.dist.pver[intersect_samples.pver, ]
-H.dist_intersect.pver <- H.dist.pver[intersect_samples.pver, ]
-
-# Check that the samples are now aligned
-all(rownames(H.dist_intersect.pver) == rownames(P.dist_intersect.pver))
-
-#re-check dimensions
-dim(H.dist_intersect.pver)
-dim(P.dist_intersect.pver)
-
-#where is the issue with one extra in H dist? 
-setdiff(rownames(H.dist_intersect.pver), rownames(P.dist_intersect.pver))
-setdiff(colnames(H.dist_intersect.pver), colnames(P.dist_intersect.pver))
-
-# Identify the column that is missing in P.dist_intersect
-missing_col.pver <- setdiff(colnames(H.dist_intersect.pver), colnames(P.dist_intersect.pver))
-# P ver 379 
-
-# Remove the missing column from H.dist_intersect
-H.dist_intersect_complete.pver <- H.dist_intersect.pver[, !colnames(H.dist_intersect.pver) %in% missing_col.pver]
-
-# Subset to only the samples that are in both datasets
-intersect_samples.pver <- intersect(rownames(H.dist_intersect_complete.pver), rownames(P.dist_intersect.pver))
-P.dist.pver <- P.dist_intersect.pver[intersect_samples.pver, ]
-H.dist.pver <- H.dist_intersect_complete.pver[intersect_samples.pver, ]
-
-#recheck dimensions - all good 
-dim(P.dist.pver)
-dim(H.dist.pver)
-```
-
-
-###6.2.3 Perform Paco analysis
-```{r, include = FALSE}
-# Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont 
-
-
-```
-
-
-###6.2.4 P. verrucosa procrustes plot
-```{r}
-
-
-
-```
-
-
-###6.2.5 Test significance 
-```{r}
-#testing significance 
-protest(X = H.dist.pver, Y = P.dist.pver, scores = "sites", permutations = 999)
-```
-
-
-# 6.3 Acropora humilis procrustes
-```{r}
-load("HostAdmix/list.acro.RData")
-#here is the subset with the data that matches the host dartseq data
-seqs_wide_acro_subset.b <- acro_seqs.b %>% 
-  filter(Vial %in% c(list.acro))
-
-
-#now must filter fasta files to correspond to samples in seqs_long subset 
-fasta_acro.b <- read_fasta_df("0_SymPortal/186_20211115_03_DBV_20211116T024440.seqs.fasta") %>%
-  filter(label %in% seqs_wide_acro_subset.b$name) %>%   
-  deframe() %>%
-  as_dna()
-
-#creating the subset symbiont tree
-kdist_acro.b <- fasta_acro.b %>%
-  dna_to_DNAbin() %>%
-  kdistance(k = 7, residues = "DNA", method = "edgar") 
-
-#as a distance matrix
-kdist_acro.b <- as.matrix(kdist_acro.b)
-
-#creating the tree
-k_tree_acro.b <- kdist_acro.b %>% phangorn::upgma()
-
-#subsetting the metadata
-seqs_wide_acro.b <- acro_seqs.b[acro_seqs.b$Vial %in% seqs_wide_acro_subset.b$Vial,] %>% 
-  dplyr::select(Vial, name, value) %>%
-  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
-  tibble::column_to_rownames(var = "Vial")
-
-#creating unifrac distance matrix and tree 
-k_unidist_acro.b <- GUniFrac(seqs_wide_acro.b, k_tree_acro.b)   #GUniFrac calculates all the distances 
-k_unidist_acro.b <- k_unidist_acro.b$unifracs
-
-#GUniFrac with alpha 0.5
-du_acro.b <- k_unidist_acro.b[, , "d_0.5"]    # GUniFrac with alpha 0.5 
-dist_acro.b <- as.dist(du_acro.b, diag = FALSE)
-```
-
-###6.3.1 Acropora Dartseq Tree
-```{r}
-load("HostAdmix/gl3.csmp.acro.RData")
-
-library(adegenet)
-
-# calculate a distance matrix
-dist_matrix_acro <- gl.dist.ind(gl3.csmp.acro, method = "euclidean", scale = TRUE)
-# convert the distance matrix to a dist object
-dart.acro.tree <- as.dist(dist_matrix_acro)
-
-```
-
-
-###6.3.2 Subset H and P matrices
-```{r}
-library(vegan)
-
-#convert host (H) and symbiont (P) distance trees as data matrices 
-H.dist.acro <- dart.acro.tree %>% as.matrix()
-P.dist.acro <- dist_acro.b %>% as.matrix()
-
-#must have same number of dimensions 
-dim(H.dist.acro)
-dim(P.dist.acro)
-
-# Subset to only the samples that are in both datasets
-intersect_samples.acro <- intersect(rownames(H.dist.acro), rownames(P.dist.acro))
-P.dist_intersect.acro <- P.dist.acro[intersect_samples.acro, ]
-H.dist_intersect.acro <- H.dist.acro[intersect_samples.acro, ]
-
-# Check that the samples are now aligned
-all(rownames(H.dist_intersect.acro) == rownames(P.dist_intersect.acro))
-
-#re-check dimensions
-dim(H.dist_intersect.acro)
-dim(P.dist_intersect.acro)
-
-#where is the issue with one extra in H dist? 
-setdiff(rownames(H.dist_intersect.acro), rownames(P.dist_intersect.acro))
-setdiff(colnames(H.dist_intersect.acro), colnames(P.dist_intersect.acro))
-
-# Identify the column that is missing in P.dist_intersect
-missing_col.acro <- setdiff(colnames(H.dist_intersect.acro), colnames(P.dist_intersect.acro))
-# P ver 379 
-
-# Remove the missing column from H.dist_intersect
-H.dist_intersect_complete.acro <- H.dist_intersect.acro[, !colnames(H.dist_intersect.acro) %in% missing_col.acro]
-
-# Subset to only the samples that are in both datasets
-intersect_samples.acro <- intersect(rownames(H.dist_intersect_complete.acro), rownames(P.dist_intersect.acro))
-P.dist.acro <- P.dist_intersect.acro[intersect_samples.acro, ]
-H.dist.acro <- H.dist_intersect_complete.acro[intersect_samples.acro, ]
-
-#recheck dimensions - all good 
-dim(P.dist.acro)
-dim(H.dist.acro)
-```
-
-
-```{r}
-#create PCoA of H.Dist and P.dist and see their distances along the axes. 
-
-paco.test.P <- cmdscale(P.dist.acro, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
-paco.test.H <- cmdscale(H.dist.acro, eig = TRUE) 
-
-ordiplot(paco.test.P)
-ordiplot(paco.test.H)
-
-MDSxy.acro.b <- data.frame(pcoa_acro.b$points) %>% 
-  rownames_to_column(var = "Vial") %>% 
-  left_join(., meta) %>% 
-   mutate(catBleaching = as.factor(catBleaching)) %>% 
-  filter(!(Vial %in% outlier_samples)) 
-
-```
-
-
-###6.3.3 Perform Paco analysis
-```{r, include = FALSE}
-# Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont 
-
-paco.acro <- procrustes(H.dist.acro, P.dist.acro, symmetric = FALSE)
-summary(paco.acro)
-#sum of squares here is ridiculous (over 1 million)
+paco.iso <- procrustes(H.dist, P.dist, symmetric = FALSE)
+summary(paco.iso)
 
 #symmetric = FALSE: This specifies that the Procrustes rotation can be non-orthogonal (i.e. generalised), meaning that it can include scaling and shearing transformations in addition to rotation and reflection. This allows for more flexible alignment between the two dissimilarity matrices, but may result in a less interpretable or meaningful alignment depending on the nature of the data.
 
 
-#check the residuals 
+#statistics check for residuals 
 #paco error chart 
-plot(paco.acro, kind = 1, type = "text")
+plot(paco.iso, kind = 1, type = "text")
 
 #show paco residuals. higher numbers mean these are the samples that have high dissimilarity between the symbiont and host trees
-plot(paco.acro, kind = 2, type = "text")
+plot(paco.iso, kind = 2, type = "text")
 ```
 
+Number of objects: 186    Number of dimensions: 186 
 
-### 6.3.4 Acropora procrustes plot
-```{r}
+Procrustes sum of squares:  
+ 1.563793e+07 
+Procrustes root mean squared error: 
+ 289.9567 
+Quantiles of Procrustes errors:
+     Min       1Q   Median       3Q      Max 
+166.5647 262.5309 276.9388 319.7066 392.3467
+*sum of squares here is ridiculous (over 1 million)*
 
-```
-
-
-
-```{r}
-##sub-panel to include only symbionts of the Acropora Procrustes to better see (not overlaid with host points or segments)
-
-```
-
-
-```{r}
-procrust.acro.clust + procrust.acro
-```
-
-
-### 6.3.5 Test significance 
-```{r}
-#testing significance 
-protest(X = H.dist.acro, Y = P.dist.acro, scores = "sites", permutations = 999)
-```
-
-
-
-#6.5 Fig 3 Procrustes
-```{r}
-procrust.pmea + procrust.pver + procrust.acro + procrust.acro.sym
-```
-
-
-# 7 dbRDA subset models 
+### Isopora procrustes plot
 
 ```{r}
-#load genetic data from the host genetic models. has the PC1 and PC2 for each species
-load("ind_coords.acro.RData")
-load("ind_coords.iso.RData")
-load("ind_coords.monti.RData")
-```
+#transfer PC coords into dataframe for plotting  
+hp.df.iso <- data.frame(rda1=paco.iso$Yrot[,1],
+rda2=paco.iso$Yrot[,2],xrda1=paco.iso$X[,1],
+xrda2=paco.iso$X[,2]) %>% 
+  tibble::rownames_to_column(var = "Vial") 
 
 
-### 7.1 Pmea Hap8 dbRDA subset
-```{r}
-#metadata for subset of genetic samples 
-load("HostAdmix/qlong.pmea.RData")
-qlong.pmea <- qlong.pmea %>% dplyr::rename(Vial = Ind)
+#filter metadata to just reef
+meta.reef <- meta_iso %>% 
+  select(sample_name, Reef) %>% 
+  rename(sample_name = "Vial")
 
-meta.pmea.admix <- hp.df.pmea %>% left_join(meta) %>% 
-  left_join(qlong.pmea) %>% 
-  tibble::column_to_rownames(var = "Vial") %>%
-  mutate(sample_name = rownames(.))
+#left join the metadata to get reef into the dataframe 
+hp.df.iso2 <- hp.df.iso %>% left_join(meta.reef)
 
-#importing unifrac distances for analysis 
-dist_pmh8_ordered <- dist_subset(dist_pmh8, rownames(meta.pmea.admix))
-
-# Make a correlation matrix of numeric variables
-cm <- cor(meta.pmea.admix %>% select(Depth, maxDHW, MMM, DHW2020, Lat, Long))
-
-corrplot(cm) # Clearly a lot of the DHW terms are positively related and approaching redundant
-
-# Check the vif scores of the full model
-ord_pmh8_full <- dbrda(dist_pmh8_ordered ~ Lat + Long + MMM + Depth + catBleaching + DHW2020 + maxDHW, data = meta.pmea.admix)
-
-sort(vif.cca(ord_pmh8_full))
-
-   #    Depth catBleaching       admix1       maxDHW      DHW2020          Lat         Long 
-   # 1.208572     1.459430     1.547302     3.526390     9.296066    23.277907    28.248336 
-  #       MMM 
-  # 32.315842 
-
-# Reduce the model (consult the corplot and vif scores)
-ord_pmh8 <- dbrda(dist_pmh8_ordered ~  Lat + admix1 + Depth + catBleaching + DHW2020 + maxDHW, data = meta.pmea.admix)
-
-# Re check the new vif scores
-sort(vif.cca(ord_pmh8))
-     #  Depth catBleaching       admix1       maxDHW      DHW2020          Lat 
-   # 1.162181     1.344646     1.531987     1.962000     6.066496     7.006022 
-
-# Use ordistep to further refine the model
-
-
-#Model: dbrda(formula = dist_pmh8_ordered ~ Lat + admix1 + catBleaching, data = meta.pmea.admix)
-           #  Df SumOfSqs       F Pr(>F)    
-#Lat           1  0.08199  4.5678  0.006 ** 
-#admix1        1  0.30430 16.9522  0.001 ***
-#catBleaching  1  0.04080  2.2730  0.063 .  
-#Residual     62  1.11291         
-
-
-#variance partitioning: how much does each variable explain in the model? residuals? 
-varp <- varpart(dist_pmh8_ordered, ~admix1, ~Lat, data = meta.pmea.admix)
-plot(varp, digits = 2, Xnames = c("admix1", "Lat"), bg = c("navy", "tomato"))
-
-meta.pmea.admix <- meta.pmea.admix %>% 
-  tibble::rownames_to_column(var = "Vial")
-
-#extract scores (values assigned to Vials) from dbRDA 
-
-
-#extract vectors from dbRDA 
-
-#produce dbRDA plot 
-
-```
-
-
-### 7.1b Pmea Hap8 dbRDA subset
-```{r}
-#Using host PC1 and PC2 axis to see if better explains variability. 
-#metadata for subset of genetic samples 
-ind_coords.pmea <- ind_coords.pmea %>% dplyr::rename(Vial = Ind) 
-ind_coords.pmea <- ind_coords.pmea %>% dplyr::select(Vial, Axis1, Axis2)
-
-meta.pmea.admix <- hp.df.pmea %>% left_join(meta) %>% 
-  left_join(ind_coords.pmea) %>% 
-      left_join(., light.data) %>% 
-  tibble::column_to_rownames(var = "Vial") %>%
-  mutate(sample_name = rownames(.))
-
-#importing unifrac distances for analysis 
-dist_pmh8_ordered <- dist_subset(dist_pmh8, rownames(meta.pmea.admix))
-
-# Make a correlation matrix of numeric variables
-cm <- cor(meta.pmea.admix %>% select(Depth, maxDHW, MMM, DHW2020, Lat, Long, Axis1, Axis2, Kd_490))
-
-corrplot(cm) # Clearly a lot of the DHW terms are positively related and approaching redundant
-
-# Check the vif scores of the full model
-ord_pmh8_full <- dbrda(dist_pmh8_ordered ~ Lat + Long + MMM + Depth + catBleaching + DHW2020 + maxDHW + Axis1 + Axis2 + Kd_490, data = meta.pmea.admix)
-
-sort(vif.cca(ord_pmh8_full))
-
-   #  Axis2        Depth catBleaching        Axis1       maxDHW      DHW2020 
-  #  1.049423     1.210745     1.476685     1.577884     3.595913     9.395082 
-  #       Lat         Long          MMM 
-  # 23.967776    28.161502    33.115062 
-
-# Reduce the model (consult the corplot and vif scores)
-ord_pmh8 <- dbrda(dist_pmh8_ordered ~  Lat + Axis1 + Axis2 + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta.pmea.admix)
-
-# Re check the new vif scores
-sort(vif.cca(ord_pmh8))
-    #   Axis2        Depth catBleaching        Axis1       maxDHW       Kd_490 
- #   1.042951     1.182727     1.432760     1.582112     1.974544     2.311119 
- #    DHW2020          Lat 
-  #  6.196582     7.446101 
-
-# Use ordistep to further refine the model
-ord_pmh8_backward <- ordistep(ord_pmh8, direction = "backward", permutations = 999)
-anova(ord_pmh8_backward, by = 'margin')
-
-
-#Model: dbrda(formula = dist_pmh8_ordered ~ Lat + Axis1 + catBleaching + Kd_490, data = meta.pmea.admix)
- #            Df SumOfSqs       F Pr(>F)    
-#Lat           1  0.04854  2.9699  0.031 *  
-#Axis1         1  0.29342 17.9547  0.001 ***
-#catBleaching  1  0.04862  2.9749  0.027 *  
-#Kd_490        1  0.04062  2.4857  0.052 .  
-#Residual     61  0.99688    
-
-
-#variance partitioning: how much does each variable explain in the model? residuals? 
-varp <- varpart(dist_pmh8_ordered, ~Axis1, ~Lat, ~catBleaching, data = meta.pmea.admix)
-plot(varp, digits = 2, Xnames = c("Host PC1", "Lat", "Bleach Condition"), bg = c("navy", "tomato", "green"))
-
-meta.pmea.admix <- meta.pmea.admix %>% 
-  tibble::rownames_to_column(var = "Vial")
-
-#extract scores (values assigned to Vials) from dbRDA 
-pmh8_scores <- as.data.frame(ord_pmh8_backward$CCA$wa)  %>%
-  tibble::rownames_to_column(var = "Vial") %>%
-  left_join(., meta.pmea.admix)
-
-#extract vectors from dbRDA 
-pmh8_vectors <- as.data.frame(ord_pmh8_backward$CCA$biplot) %>%
-  tibble::rownames_to_column(var = "factors")
-
-#produce dbRDA plot 
-pmh8_fullrda <- pmh8_scores %>%
- # mutate(Reef = fct_relevel(Reef, reef_order)) %>%
-    ggplot(aes(x = dbRDA1, y = dbRDA2)) +
-      geom_point(aes(fill = Lat), size = 4, shape = 21) +
-        geom_label_repel(data = pmh8_vectors, aes(x = dbRDA1, y = dbRDA2, label = factors), box.padding = 0.5, size = 4, segment.colour = NA) +
-      geom_segment(data = pmh8_vectors, aes(x = 0, xend = dbRDA1, y = 0, yend = dbRDA2), 
-      size = 0.5, arrow = arrow(length = unit(0.5, "cm")), colour = "royalblue2") +
-     guides(fill = guide_colorbar (reverse = T)) +
-      scale_fill_viridis_c(option = "magma", direction = -1) +
-     theme(legend.position = "none") +
-    theme(aspect.ratio = 1, text = element_text(size = 15)) +
+#create plot 
+procrust.iso <- ggplot(hp.df.iso2) +
+  geom_segment(aes(x=rda1,y=rda2,xend=xrda1,yend=xrda2), size = .2) +
+  geom_point(aes(x=rda1, y=rda2, shape = "Host", color = Reef)) +
+  geom_point(aes(x=xrda1, y=xrda2, shape = "Symbiont", color = Reef)) +
+  scale_shape_manual(name = "Groups", 
+                     values = c("Host" = 19, "Symbiont" = 17)) +
+  scale_colour_manual(values = reef_pal2) +
+    theme(legend.position = "none") +
   theme(plot.background = element_blank(),
     panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank())
+    panel.grid.major = element_blank()) +
+  theme(aspect.ratio = 1) 
 
-pmh8_fullrda
-```
-**Host PC Axis 1 explains more variation than Admixture (1.2% more) so we will go with using this approach and not the dominant host admixture cluster**
-
-
-### 7.2 Pver dbRDA subset
-```{r}
-#metadata for subset of genetic samples 
-load("HostAdmix/qlong.pver.RData")
-qlong.pver <- qlong.pver %>% dplyr::rename(Vial = Ind)
-
-meta.pver.admix <- hp.df.pver %>% left_join(meta) %>% 
-  left_join(qlong.pver) %>% 
-        left_join(., light.data) %>% 
-  tibble::column_to_rownames(var = "Vial") %>%
-  mutate(sample_name = rownames(.))
-
-#importing unifrac distances for analysis 
-dist_pver_ordered <- dist_subset(dist_pver.b, rownames(meta.pver.admix))
-
-# Make a correlation matrix of numeric variables
-cm <- cor(meta.pver.admix %>% select(Depth, maxDHW, MMM, DHW2020, Lat, Long, Admix1, Kd_490))
-
-#plot the correlation matrix 
-corrplot(cm)
-
-# Check the vif scores of the full model
-ord_pver_full <- dbrda(dist_pver_ordered ~ Lat + Long + MMM + Depth + catBleaching + DHW2020 + maxDHW + Admix1 + Kd_490, data = meta.pver.admix)
-
-
-
-sort(vif.cca(ord_pver_full))
-
-#catBleaching        Depth       Admix1       Kd_490      DHW2020       maxDHW 
-  #  1.092418     1.094186     1.166948     1.977137     3.371504     3.778786 
-    #    Long          Lat          MMM 
-  # 11.460421    18.905643    25.899071 
-
-# Reduce the model (consult the corplot and vif scores)
-ord_pver <- dbrda(dist_pver_ordered ~ Lat + Admix1 + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta.pver.admix)
-
-# Re check the new vif scores
-sort(vif.cca(ord_pver))
-
-    #  Depth catBleaching       Admix1       maxDHW       Kd_490          Lat 
-  #  1.060456     1.092394     1.129541     1.502577     1.949109     2.802223 
-  #   DHW2020 
-  #  3.130006 
-
-# Use ordistep to further refine the model
-ord_pver_backward <- ordistep(ord_pver, direction = "backward", permutations = 999)
-anova(ord_pver_backward, by = 'margin')
-
-#Model: dbrda(formula = dist_pver_ordered ~ Lat + Admix1 + DHW2020 + Kd_490, data = meta.pver.admix)
-     #     Df SumOfSqs      F Pr(>F)  
-#Lat        1  0.04706 2.1461  0.053 .
-#Admix1     1  0.04483 2.0445  0.059 .
-#DHW2020    1  0.04884 2.2273  0.043 *
-#Kd_490     1  0.06047 2.7574  0.017 *
-#Residual 125  2.74110                
-
-
-#variance partitioning: how much does each variable explain in the model? residuals? 
-varp <- varpart(dist_pver_ordered,  ~Admix1, ~Depth, data = meta.pver.admix)
-plot(varp, digits = 2, Xnames = c("Admix1", "Depth"), bg = c("navy", "tomato"))
-
-meta.pver.admix <- meta.pver.admix %>% 
-  tibble::rownames_to_column(var = "Vial")
-
-#extract scores (values assigned to Vials) from dbRDA 
-pver_scores <- as.data.frame(ord_pver_backward$CCA$wa)  %>%
-  tibble::rownames_to_column(var = "Vial") %>%
-  left_join(., meta.pver.admix)
-
-#extract vectors from dbRDA 
-pver_vectors <- as.data.frame(ord_pver_backward$CCA$biplot) %>%
-  tibble::rownames_to_column(var = "factors")
-
-#produce dbRDA plot 
-pver_fullrda <- pver_scores %>%
- # mutate(Reef = fct_relevel(Reef, reef_order)) %>%
-    ggplot(aes(x = dbRDA1, y = dbRDA2)) +
-      geom_point(aes(fill = Lat), size = 4, shape = 21) +
-      geom_label_repel(data = pver_vectors, aes(x = dbRDA1, y = dbRDA2, label = factors), box.padding = 0.5, size = 4, segment.colour = NA) +
-      geom_segment(data = pver_vectors, aes(x = 0, xend = dbRDA1, y = 0, yend = dbRDA2), 
-      size = 0.5, arrow = arrow(length = unit(0.5, "cm")), colour = "royalblue2") +
-     guides(fill = guide_colorbar (reverse = T)) +
-      scale_fill_viridis_c(option = "magma", direction = -1) +
-     theme(legend.position = "none") +
-    theme(aspect.ratio = 1, text = element_text(size = 15)) +
-  theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank())
-
-pver_fullrda
-```
-
-
-### 7.2b Pver dbRDA subset
-```{r}
-#metadata for subset of genetic samples 
-ind_coords.pver <- ind_coords.pver %>% dplyr::rename(Vial = Ind) 
-ind_coords.pver <- ind_coords.pver %>% dplyr::select(Vial, Axis1, Axis2)
-
-meta.pver.admix <- hp.df.pver %>% left_join(meta) %>% 
-  left_join(ind_coords.pver) %>% 
-  left_join(., light.data) %>% 
-  tibble::column_to_rownames(var = "Vial") %>%
-  mutate(sample_name = rownames(.))
-
-#importing unifrac distances for analysis 
-dist_pver_ordered <- dist_subset(dist_pver.b, rownames(meta.pver.admix))
-
-# Make a correlation matrix of numeric variables
-cm <- cor(meta.pver.admix %>% select(Depth, maxDHW, MMM, DHW2020, Lat, Long, Axis1, Axis2))
-
-#plot the correlation matrix 
-corrplot(cm)
-
-# Check the vif scores of the full model
-ord_pver_full <- dbrda(dist_pver_ordered ~ Lat + Long + MMM + Depth + catBleaching + DHW2020 + maxDHW + Axis1 + Axis2 + Kd_490, data = meta.pver.admix)
-
-sort(vif.cca(ord_pver_full))
-
-#catBleaching        Depth        Axis2        Axis1       Kd_490      DHW2020 
- #   1.122876     1.169560     1.292441     1.458919     2.023064     3.395482 
-  #    maxDHW         Long          Lat          MMM 
- #   3.525813    11.370598    18.413712    26.043164 
-
-# Reduce the model (consult the corplot and vif scores)
-ord_pver <- dbrda(dist_pver_ordered ~ Lat + Axis1 + Axis2 + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta.pver.admix)
-
-# Re check the new vif scores
-sort(vif.cca(ord_pver))
-   
-#catBleaching        Depth        Axis2       maxDHW        Axis1       Kd_490 
-  #  1.122821     1.131462     1.287313     1.443148     1.452954     1.997668 
-    #     Lat      DHW2020 
-  #  2.846434     3.152849 
-
-# Use ordistep to further refine the model
-ord_pver_backward <- ordistep(ord_pver, direction = "backward", permutations = 999)
-anova(ord_pver_backward, by = 'margin')
-
-#Model: dbrda(formula = dist_pver_ordered ~ Axis1 + Axis2 + Depth, data = meta.pver.admix)
-   #       Df SumOfSqs      F Pr(>F)    
-#Model: dbrda(formula = dist_pver_ordered ~ Axis1 + Depth, data = meta.pver.admix)
-    #      Df SumOfSqs      F Pr(>F)    
-#Axis1      1  0.15396 7.1139  0.001 ***
-#Depth      1  0.04393 2.0297  0.059 . 
-#Residual 126  2.68879          
-
-
-#variance partitioning: how much does each variable explain in the model? residuals? 
-varp <- varpart(dist_pver_ordered,  ~Axis1, ~Depth, data = meta.pver.admix)
-plot(varp, digits = 2, Xnames = c("HostPC1", "Depth"), bg = c("navy", "tomato"))
-
-meta.pver.admix <- meta.pver.admix %>% 
-  tibble::rownames_to_column(var = "Vial")
-
-#extract scores (values assigned to Vials) from dbRDA 
-pver_scores <- as.data.frame(ord_pver_backward$CCA$wa)  %>%
-  tibble::rownames_to_column(var = "Vial") %>%
-  left_join(., meta.pver.admix)
-
-#extract vectors from dbRDA 
-pver_vectors <- as.data.frame(ord_pver_backward$CCA$biplot) %>%
-  tibble::rownames_to_column(var = "factors")
-
-#produce dbRDA plot 
-pver_fullrda <- pver_scores %>%
- # mutate(Reef = fct_relevel(Reef, reef_order)) %>%
-    ggplot(aes(x = dbRDA1, y = dbRDA2)) +
-      geom_point(aes(fill = Lat), size = 4, shape = 21) +
-      geom_label_repel(data = pver_vectors, aes(x = dbRDA1, y = dbRDA2, label = factors), box.padding = 0.5, size = 4, segment.colour = NA) +
-      geom_segment(data = pver_vectors, aes(x = 0, xend = dbRDA1, y = 0, yend = dbRDA2), 
-      size = 0.5, arrow = arrow(length = unit(0.5, "cm")), colour = "royalblue2") +
-     guides(fill = guide_colorbar (reverse = T)) +
-      scale_fill_viridis_c(option = "magma", direction = -1) +
-     theme(legend.position = "none") +
-    theme(aspect.ratio = 1, text = element_text(size = 15)) +
-  theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank())
-
-pver_fullrda
-```
-
-
-
-## 7.3 Acro dbRDA subset
-**Is recent.maxDHW still an important factor when we account for cryptic speciation of the host?**
-```{r}
-#metadata for subset of genetic samples 
-load("HostAdmix/qlong.acro.RData")
-qlong.acro <- qlong.acro %>% 
-  select(Vial, Cluster = variable) %>% 
-  mutate(Cluster = as.factor(Cluster)) 
-
-
-meta.acro.admix <- hp.df.acro %>% left_join(meta) %>% 
-  left_join(qlong.acro) %>% 
-    left_join(., light.data) %>% 
-  tibble::column_to_rownames(var = "Vial") %>%
-  mutate(sample_name = rownames(.)) %>% 
-  filter(!is.na(Cluster))
-
-#importing unifrac distances for analysis 
-dist_acro_ordered <- dist_subset(dist_acro, rownames(meta.acro.admix)) 
-
-# Make a correlation matrix of numeric variables to check for collinearity b/w enviro variables 
-cm <- cor(meta.acro.admix %>% select(Depth, maxDHW, MMM, DHW2020, Lat, Long))
-corrplot(cm) 
-
-# Check the vif scores of the full model
-ord_acro_full <- dbrda(dist_acro_ordered ~ Lat + Long + MMM + Depth + catBleaching + DHW2020 + maxDHW + Cluster + Kd_490, data = meta.acro.admix)
-
-sort(vif.cca(ord_acro_full))
-#ClusterCluster 2     catBleaching ClusterCluster 3            Depth           Kd_490 
-     #   1.140291         1.299252         1.372435         1.488882         1.959612 
-     #     maxDHW          DHW2020             Long              Lat              MMM 
-      #  3.006738         4.382221        17.411663        30.637018        61.321187 
-
-# Reduce the model (consult the corplot and vif scores)
-ord_acro <- dbrda(dist_acro_ordered ~  Lat + Cluster + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta.acro.admix)
-
-# Re check the new vif scores
-sort(vif.cca(ord_acro))
-#Cluster 2 ClusterCluster 3     catBleaching            Depth           Kd_490 
-    #    1.110087         1.238475         1.256406         1.312395         1.577857 
-     #     maxDHW          DHW2020              Lat 
-   #     1.962547         4.255033         4.270588 
-
-
-# Reduce the model (consult the corplot and vif scores)
-ord_acro <- dbrda(dist_acro_ordered ~ Lat + Cluster + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta.acro.admix)
-
-# Use ordistep to further refine the model
-ord_acro_backward <- ordistep(ord_acro, direction = "backward", permutations = 999)
-anova(ord_acro_backward, by = 'margin')
-
- #Model: dbrda(formula = dist_acro_ordered ~ Lat + Cluster + Depth + catBleaching + DHW2020 + maxDHW, data = meta.acro.admix)
-     #         Df SumOfSqs       F Pr(>F)    
-#Lat            1  0.01494  5.4055  0.001 ***
-#Cluster        2  0.01075  1.9453  0.038 *  
-#Depth          1  0.00888  3.2121  0.021 *  
-#catBleaching   1  0.00684  2.4759  0.027 *  
-#DHW2020        1  0.02112  7.6438  0.001 ***
-#maxDHW         1  0.04052 14.6620  0.001 ***
-#Residual     247  0.68262                            
-
-
-#variance partitioning: how much does each variable explain in the model? residuals? 
-varp <- varpart(dist_acro_ordered,  ~Lat, ~Cluster, ~varSST, ~maxDHW, data = meta.acro.admix)
-plot(varp, digits = 2, Xnames = c("Lat", "Cluster", "varSST", "maxDHW"), bg = c("navy", "tomato", "orange", "green"))
-
-#extract scores from dbRDA 
-meta.acro.admix <- meta.acro.admix %>% 
-  tibble::rownames_to_column(var = "Vial")
-
-#extract scores (values assigned to Vials) from dbRDA 
-acro_scores <- as.data.frame(ord_acro_backward$CCA$wa)  %>%
-  tibble::rownames_to_column(var = "Vial") %>%
-  left_join(., meta.acro.admix)
-
-#extract vectors from dbRDA 
-acro_vectors <- as.data.frame(ord_acro_backward$CCA$biplot) %>%
-  tibble::rownames_to_column(var = "factors")
-
-#produce dbRDA plot 
-acro_fullrda <- acro_scores %>%
- # mutate(Reef = fct_relevel(Reef, reef_order)) %>%
-    ggplot(aes(x = dbRDA1, y = dbRDA2)) +
-      geom_point(aes(fill = Lat), size = 4, shape = 21) +
-      geom_label_repel(data = acro_vectors, aes(x = dbRDA1, y = dbRDA2, label = factors), box.padding = 0.5, size = 4, segment.colour = NA) +
-      geom_segment(data = acro_vectors, aes(x = 0, xend = dbRDA1, y = 0, yend = dbRDA2), 
-      size = 0.5, arrow = arrow(length = unit(0.5, "cm")), colour = "royalblue2") +
-     guides(fill = guide_colorbar (reverse = T)) +
-      scale_fill_viridis_c(option = "magma", direction = -1) +
-     theme(legend.position = "right") +
-    theme(aspect.ratio = 1, text = element_text(size = 15)) +
-  theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank())
-
-acro_fullrda
-```
-
-
-```{r}
-#metadata for subset of genetic samples 
-ind_coords.acro <- ind_coords.acro %>% dplyr::rename(Vial = Ind) 
-ind_coords.acro <- ind_coords.acro %>% dplyr::select(Vial, Axis1, Axis2)
-meta.acro.admix <- hp.df.acro %>% left_join(meta) %>% 
-      left_join(., light.data) %>% 
-  left_join(ind_coords.acro) %>% 
-  tibble::column_to_rownames(var = "Vial") %>%
-  mutate(sample_name = rownames(.))
-
-
-#importing unifrac distances for analysis 
-dist_acro_ordered <- dist_subset(dist_acro, rownames(meta.acro.admix)) 
-
-# Make a correlation matrix of numeric variables to check for collinearity b/w enviro variables 
-cm <- cor(meta.acro.admix %>% select(Depth, maxDHW, MMM, DHW2020, Lat, Long, Axis1, Axis2, Kd_490))
-corrplot(cm) 
-
-# Check the vif scores of the full model
-ord_acro_full <- dbrda(dist_acro_ordered ~ Lat + Long + MMM + Depth + catBleaching + DHW2020 + maxDHW + Axis1 + Axis2 + Kd_490, data = meta.acro.admix)
-
-sort(vif.cca(ord_acro_full))
- #     Axis2 catBleaching        Axis1        Depth       Kd_490       maxDHW 
-  #  1.160700     1.299017     1.430682     1.459460     2.053633     3.037757 
- #    DHW2020         Long          Lat          MMM 
-  #  4.417400    18.882381    30.997679    64.794737 
-
-# Reduce the model (consult the corplot and vif scores)
-ord_acro <- dbrda(dist_acro_ordered ~  Lat + Axis1 + Axis2 + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta.acro.admix)
-
-# Re check the new vif scores
-sort(vif.cca(ord_acro))
-    #   Axis2        Axis1 catBleaching        Depth       Kd_490       maxDHW 
- #   1.118860     1.225967     1.254304     1.292410     1.608642     1.993583 
- #    DHW2020          Lat 
- #   4.230481     4.237092 
-
-# Reduce the model (consult the corplot and vif scores)
-ord_acro <- dbrda(dist_acro_ordered ~ Lat + Axis1 + Axis2 + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta.acro.admix)
-
-# Use ordistep to further refine the model
-ord_acro_backward <- ordistep(ord_acro, direction = "backward", permutations = 999)
-anova(ord_acro_backward, by = 'margin')
-
-#Model: dbrda(formula = dist_acro_ordered ~ Lat + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta.acro.admix)
-  #            Df SumOfSqs       F Pr(>F)    
-#Lat            1   0.2609  5.9380  0.001 ***
-#Depth          1   0.1213  2.7602  0.011 *  
-#catBleaching   1   0.1001  2.2791  0.05 *  
-#DHW2020        1   0.3341  7.6038  0.001 ***
-#maxDHW         1   0.6827 15.5383  0.001 ***
-#Kd_490         1   0.3042  6.9230  0.001 ***
-#Residual     250  10.9836                                            
-
-
-#variance partitioning: how much does each variable explain in the model? residuals? 
-varp <- varpart(dist_acro_ordered,  ~maxDHW, ~DHW2020, ~Kd_490, ~Lat, data = meta.acro.admix)
-plot(varp, digits = 2, Xnames = c("maxDHW", "DHW2020", "KD490", "Lat"), bg = c("navy", "tomato", "orange", "green"))
-
-#extract scores from dbRDA 
-meta.acro.admix <- meta.acro.admix %>% 
-  tibble::rownames_to_column(var = "Vial")
-
-#extract scores (values assigned to Vials) from dbRDA 
-acro_scores <- as.data.frame(ord_acro_backward$CCA$wa)  %>%
-  tibble::rownames_to_column(var = "Vial") %>%
-  left_join(., meta.acro.admix)
-
-#extract vectors from dbRDA 
-acro_vectors <- as.data.frame(ord_acro_backward$CCA$biplot) %>%
-  tibble::rownames_to_column(var = "factors")
-
-#produce dbRDA plot 
-acro_fullrda <- acro_scores %>%
- # mutate(Reef = fct_relevel(Reef, reef_order)) %>%
-    ggplot(aes(x = dbRDA1, y = dbRDA2)) +
-      geom_point(aes(fill = Lat), size = 4, shape = 21) +
-      geom_label_repel(data = acro_vectors, aes(x = dbRDA1, y = dbRDA2, label = factors), box.padding = 0.5, size = 4, segment.colour = NA) +
-      geom_segment(data = acro_vectors, aes(x = 0, xend = dbRDA1, y = 0, yend = dbRDA2), 
-      size = 0.5, arrow = arrow(length = unit(0.5, "cm")), colour = "royalblue2") +
-     guides(fill = guide_colorbar (reverse = T)) +
-      scale_fill_viridis_c(option = "magma", direction = -1) +
-     theme(legend.position = "right") +
-    theme(aspect.ratio = 1, text = element_text(size = 15)) +
-  theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank())
-
-acro_fullrda
-```
-
-
-
-```{r}
-pmh8_fullrda + pver_fullrda + acro_fullrda
-```
-
-
-**Because we see an influence of genetic cluster on the environmental factors, we will look specifically at the main Acropora host cluster to see what environmental drivers are an influence. It is difficult to draw any conclusion from environment when there are interactions b/w where host are, and what environmental patterns they experience** 
-
-##7.4 Acro AHCL1 only dbRDA subset
-```{r}
-#metadata for subset of genetic samples 
-load("HostAdmix/qlong.acroC3.RData")
-qlong.acroC3 <- qlong.acroC3 %>% 
-  select(Vial = Ind, Admix1)
-
-
-meta.acroC3.admix <- hp.df.acroC3 %>% left_join(meta) %>% 
-  left_join(qlong.acroC3) %>% 
-   left_join(., light.data) %>% 
-  tibble::column_to_rownames(var = "Vial") %>%
-  mutate(sample_name = rownames(.)) 
-
-#importing unifrac distances for analysis 
-dist_acroC3_ordered <- dist_subset(dist_acroC3.b, rownames(meta.acroC3.admix)) 
-
-# Make a correlation matrix of numeric variables
-cm <- cor(meta.acroC3.admix %>% select(Depth, maxDHW, MMM, DHW2020, Lat, Long, Kd_490))
-
-corrplot(cm) # A lot of the DHW terms are positively related and approaching redundant
-
-
-# Check the vif scores of the full model
-ord_acroC3_full <- dbrda(dist_acroC3_ordered ~ Lat + Long + MMM + Depth + catBleaching + DHW2020 + maxDHW + Kd_490, data = meta.acroC3.admix)
-
-
-sort(vif.cca(ord_acroC3_full))
-#catBleaching        Depth       maxDHW      DHW2020         Long          Lat          MMM 
-  #  1.270005     1.316018     2.135333     3.187346    12.420998    22.481312    42.195356 
-
-# Reduce the model (consult the corplot and vif scores)
-ord_acroC3 <- dbrda(dist_acroC3_ordered ~ Lat + Kd_490 + Depth + catBleaching + DHW2020 + maxDHW, data = meta.acroC3.admix)
-
-# Re check the new vif scores
-sort(vif.cca(ord_acroC3))
-#catBleaching        Depth       Kd_490       maxDHW          Lat      DHW2020 
-   # 1.229349     1.247731     1.534752     1.764076     3.389785     3.506005 
-
-# Use ordistep to further refine the model
-ord_acroC3_backward <- ordistep(ord_acroC3, direction = "backward", permutations = 999)
-anova(ord_acroC3_backward, by = 'margin')
-             
-#Model: dbrda(formula = dist_acroC3_ordered ~ Lat + Kd_490 + Depth + DHW2020 + maxDHW, data = meta.acroC3.admix)
-   #       Df SumOfSqs       F Pr(>F)    
-#Lat        1  0.01867  5.8986  0.002 ** 
-#Kd_490     1  0.01761  5.5643  0.001 ***
-#Depth      1  0.00731  2.3098  0.045 *  
-#DHW2020    1  0.02061  6.5121  0.001 ***
-#maxDHW     1  0.03527 11.1436  0.001 ***
-#Residual 192  0.60768               
-
-#variance partitioning: how much does each variable explain in the model? residuals? 
-varp <- varpart(dist_acroC3_ordered,  ~Depth, ~maxDHW, ~Lat, ~DHW2020, data = meta.acroC3.admix)
-plot(varp, digits = 2, Xnames = c("Depth", "maxDHW", "Lat", "DHW2020"), bg = c("navy", "tomato", "orange", "green"))
-
-#extract scores from dbRDA 
-meta.acroC3.admix <- meta.acroC3.admix %>% 
-  tibble::rownames_to_column(var = "Vial")
-
-#extract scores (values assigned to Vials) from dbRDA 
-acroC3_scores <- as.data.frame(ord_acroC3_backward$CCA$wa)  %>%
-  tibble::rownames_to_column(var = "Vial") %>%
-  left_join(., meta.acroC3.admix)
-
-#extract vectors from dbRDA 
-acroC3_vectors <- as.data.frame(ord_acroC3_backward$CCA$biplot) %>%
-  tibble::rownames_to_column(var = "factors")
-
-#produce dbRDA plot 
-acroC3_fullrda <- acroC3_scores %>%
-    ggplot(aes(x = dbRDA1, y = dbRDA2)) +
-      geom_point(aes(fill = Lat), size = 4, shape = 21) +
-      geom_label_repel(data = acroC3_vectors, aes(x = dbRDA1, y = dbRDA2, label = factors), box.padding = 0.5, size = 4, segment.colour = NA) +
-      geom_segment(data = acroC3_vectors, aes(x = 0, xend = dbRDA1, y = 0, yend = dbRDA2), 
-      size = 0.5, arrow = arrow(length = unit(0.5, "cm")), colour = "royalblue2") +
-     guides(fill = guide_colorbar (reverse = T)) +
-      scale_fill_viridis_c(option = "magma", direction = -1) +
-     theme(legend.position = "right") +
-    theme(aspect.ratio = 1, text = element_text(size = 15)) +
-  theme(plot.background = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.grid.major = element_blank()) 
-
-acroC3_fullrda
-```
-
-
-```{r}
-#Compaison between full acropora dbRDA (left) and a dbRDA containing only the main host cluster AHCL1
-acro_fullrda + acroC3_fullrda
-```
-
-
-```{r}
-clust_pal <- c("#768b45", "#a9be77")
-
-clust_names <- c("ClatN", "ClatS")
-
-names(clust_pal) <- clust_names
-
-poci.pie <- poci_k %>% 
-  filter(mtORF != "Pverrucosa") %>% 
-  filter(k_id != "Cpac") %>% 
-  group_by(Reef, k_id) %>% 
-  dplyr::summarise(n = n()) %>% 
-    group_by(Reef) %>%
-  mutate(proportion = n / sum(n) * 100)
-
-poci.pie
-
-ggplot(poci.pie, aes(x = "", y = n, fill = factor(k_id))) +
-  geom_bar(position="fill", stat="identity") + coord_polar("y")+
-  facet_wrap( ~ Reef) +
-  scale_fill_manual(values = clust_pal) +
-  theme_classic()+
-  theme(legend.position = c(0.8, 0.15), 
-        axis.title=element_blank(), 
-        axis.line=element_blank(),
-        axis.ticks=element_blank(), 
-        axis.text=element_blank(),
-        plot.background = element_blank(), 
-        plot.title=element_text(color="black",size=10,face="plain",hjust=0.5),
-        strip.background = element_blank())
-
-```
-
-
-```{r}
-C3prop <- acro_k %>%
-  group_by(Reef, k_id) %>%
-  summarise(n = n()) %>%
-  group_by(Reef) %>%
-  mutate(proportion = n / sum(n) * 100)
-```
-
-```{r}
-meta_acro.heat <- meta_acro %>% select(Reef, maxDHW, recent.maxDHW, DHW2020, Lat, Long) %>% 
-    group_by(Reef) %>%
-   summarise(
-    maxDHW_mean = round(mean(maxDHW), 2),
-    recent.maxDHW_mean = round(mean(recent.maxDHW), 2),
-    DHW2020_mean = round(mean(DHW2020), 2),
-    Lat_mean = round(mean(Lat), 2), 
-    Long_mean = round(mean(Long), 2))
-
-C3prop.heat <- C3prop %>% left_join(meta_acro.heat)
-```
-
-
-
-```{r}
-#need to join metadata for Acropora (vial number only) with dominant type profile. Can also extract the dominant sequence. 
-
-prof.data.ahum <- profile_data %>% filter(Species == "Ahumilis") %>% 
-  filter(name != "non-profile sequences") %>% 
-  dplyr::select(name, value, Vial)
-
-prof.data.ahum %>% distinct(Vial)
-#should be 10 samples removed with the next line of code
-
-prof.data.ahum <- prof.data.ahum %>%
-  group_by(Vial) %>%
-  slice_max(order_by = value)
-
-save(prof.data.ahum, file = "prof.data.ahum.RData")
+save(procrust.iso, file = "procrust.iso.RData")
 ```
