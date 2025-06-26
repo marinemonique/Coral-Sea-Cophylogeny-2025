@@ -708,12 +708,12 @@ kdist_acro_symbioant <- fasta_acro_symbioant %>%
 ```
 
 ```{r}
-#k_tree_acro_symbioant <- kdist_acro_symbioant %>% phangorn::upgma()
+k_tree_acro_symbioant <- kdist_acro_symbioant %>% phangorn::upgma()
 
-#k_tree_acro_symbioant
+k_tree_acro_symbioant
 
-#save(k_tree_acro_symbioant, file = "kdist_acro_symbioant.RData")
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_acropora_CS_2024/kdist_acro_symbioant.RData")
+save(k_tree_acro_symbioant, file = "kdist_acro_symbioant.RData")
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_acro_symbioant.RData")
 ```
 
 ```{r}
@@ -748,14 +748,14 @@ acro_sample_order <- tree_acro_symbioant$data %>% filter(isTip == "TRUE") %>%
   pull(label)
 
 # Start plotting the composition data
-plot_df_acro_symbioant <- all_data %>%
+plot_df_acro_symbioant <- all_data_acro %>%
   mutate(sample_name = fct_relevel(sample_name, acro_sample_order))
 
 theme_set(theme_bw())
 
 
 # find the likely distinguishing seqs in here
-test_df <- seq_data %>%
+test_df <- seq_data_acro %>%
    group_by(name) %>%
    summarise(mean = mean(value_rel), n = n()) %>%
    arrange(desc(n), desc(mean))
@@ -775,8 +775,8 @@ theme(aspect.ratio = 0.5, legend.position = "none", axis.text.y=element_blank(),
       axis.title.x = element_blank(), axis.title.y = element_blank(),
       panel.border = element_blank(), panel.grid.major = element_blank(),
 panel.grid.minor = element_blank(), axis.ticks = element_blank()) +
-scale_fill_manual(values = all_pal, breaks = levels(profile_data$name)) +
-scale_colour_manual(values = all_pal, breaks = levels(profile_data$name)) +
+scale_fill_manual(values = all_pal, breaks = levels(profile_data_acro$name)) +
+scale_colour_manual(values = all_pal, breaks = levels(profile_data_acro$name)) +
 geom_hline(yintercept = 1, size = 1) +
 guides(fill=guide_legend(ncol=2))
 
@@ -810,91 +810,13 @@ combined_plot_acro
 
 ###4.1.1 Isopora Reef PCoA
 ```{r}
-reef_order <- meta %>% distinct(Reef, Lat) %>%
+reef_order <- meta %>% rename(`GPS S` = "Lat") %>% 
+  distinct(Reef, Lat) %>%
   group_by(Reef) %>%
   summarise(Lat = mean(Lat)) %>%
   arrange(Lat) %>%
   pull(Reef)
 
-pcoa_pver <- cmdscale(dist_pver, eig = TRUE) #this is doing 'cmds' or classic multidimensional scaling
-
-ordiplot(pcoa_pver, display = 'sites', type = 'text')
-barplot(pcoa_pver$eig, names = paste ('PCoA', 1:152), las = 3, ylab = 'eigenvalues')
-
-# Custom x and y labels
-xlab = paste("Axis 1 (1.4%)")
-ylab = paste("Axis 2 (0.5%)")
-
-MDSxy.pver <- data.frame(pcoa_pver$points) %>% 
-  rownames_to_column(var = "Vial") %>% 
-  left_join(., meta)
-
-pverPCA <- MDSxy.pver %>%
-  mutate(Reef = fct_relevel(Reef, reef_order)) %>%
-  ggplot(aes(X1, X2, fill = Reef)) + 
-  geom_point(alpha = 1, shape = 21, size = 3) + 
-  scale_fill_viridis_d(option = "magma", direction = -1) +
-   theme(legend.position = "none", aspect.ratio = 1, text = element_text(size = 15))
-
-pverPCA
-```
-
-
-```{r}
-# Extract the eigenvalues
-eigenvalues <- pcoa_pver$eig
-
-# Variance explained by the first PC
-variance_explained_by_PC1 <- eigenvalues[1]
-
-# Variance explained by the second PC
-variance_explained_by_PC2 <- eigenvalues[2]
-
-# Print the results
-cat("Variance explained by the first PC: ", variance_explained_by_PC1, "\n")
-cat("Variance explained by the second PC: ", variance_explained_by_PC2, "\n")
-```
-
-
-###4.1.2 Montipora Reef PCoA
-```{r}
-pcoa_pmh8 <- cmdscale(dist_pmh8, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
-
-ordiplot(pcoa_pmh8, display = 'sites', type = 'text')
-barplot(pcoa_pmh8$eig, names = paste ('PCoA', 1:172), las = 3, ylab = 'eigenvalues')
-
-# Custom x and y labels
-xlab = paste("Axis 1 (2.4%)")
-ylab = paste("Axis 2 (1.1%)")
-
-MDSxy.pmh8 <- data.frame(pcoa_pmh8$points) %>% 
-  rownames_to_column(var = "Vial") %>% 
-  left_join(., meta)
-
-pmh8PCA <- MDSxy.pmh8 %>%
-  mutate(Reef = fct_relevel(Reef, reef_order)) %>%
-  ggplot(aes(X1, X2, fill = Reef)) + 
-  geom_point(alpha = 1, shape = 21, size = 3) + 
-  scale_fill_viridis_d(option = "magma", direction = -1) +
-   theme(legend.position = "none", aspect.ratio = 1, text = element_text(size = 15))
-
-pmh8PCA
-```
-
-
-```{r}
-# Extract the eigenvalues
-eigenvalues <- pcoa_pmh8$eig
-
-# Variance explained by the first PC
-variance_explained_by_PC1 <- eigenvalues[1]
-
-# Variance explained by the second PC
-variance_explained_by_PC2 <- eigenvalues[2]
-
-# Print the results
-cat("Variance explained by the first PC: ", variance_explained_by_PC1, "\n")
-cat("Variance explained by the second PC: ", variance_explained_by_PC2, "\n")
 ```
 
 
