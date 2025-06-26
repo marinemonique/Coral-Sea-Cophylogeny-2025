@@ -832,7 +832,7 @@ ylab = paste("Axis 2 (X%)")
 
 MDSxy.iso <- data.frame(pcoa_iso$points) %>% 
   rownames_to_column(var = "sample_name") %>% 
-  left_join(., meta_iso)# %>% 
+  left_join(., meta)# %>% 
  #  mutate(catBleaching = as.factor(catBleaching)) %>% 
  # filter(!(Vial %in% outlier_samples)) 
 
@@ -846,6 +846,68 @@ isoPCA <- MDSxy.iso %>%
  theme(legend.position = "none", aspect.ratio = 1, text = element_text(size = 15))
 
 isoPCA
+```
+
+# 2.2 Montipora
+```{r}
+pcoa_monti <- cmdscale(dist_monti_symbioant, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
+
+#outlier_samples <- XX
+
+ordiplot(pcoa_monti, display = 'sites', type = 'text')
+barplot (pcoa_monti$eig, names = paste ('PCoA', 1:187), las = 5, ylab = 'eigenvalues') #invalid value specified for graphical parameter "las"
+
+# Custom x and y labels
+xlab = paste("Axis 1 (X%)")
+ylab = paste("Axis 2 (X%)")
+
+MDSxy.monti <- data.frame(pcoa_monti$points) %>% 
+  rownames_to_column(var = "sample_name") %>% 
+  left_join(., meta)# %>% 
+ #  mutate(catBleaching = as.factor(catBleaching)) %>% 
+ # filter(!(Vial %in% outlier_samples)) 
+
+montiPCA <- MDSxy.monti %>%
+  filter(Reef != "NA") %>% 
+ # mutate(Reef = fct_relevel(Reef, reef_order)) %>%
+  ggplot(aes(X1, X2, fill = Reef)) + 
+  geom_point(alpha = 1, shape = 21, size = 3) + 
+  scale_fill_viridis_d(option = "magma", direction = -1)+ 
+#  scale_fill_manual(values = reef_pal) #+
+ theme(legend.position = "none", aspect.ratio = 1, text = element_text(size = 15))
+
+montiPCA
+```
+
+##2.3 Acropora
+```{r}
+pcoa_acro <- cmdscale(dist_acro_symbioant, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
+
+#outlier_samples <- XX
+
+ordiplot(pcoa_acro, display = 'sites', type = 'text')
+barplot (pcoa_acro$eig, names = paste ('PCoA', 1:187), las = 5, ylab = 'eigenvalues') #invalid value specified for graphical parameter "las"
+
+# Custom x and y labels
+xlab = paste("Axis 1 (X%)")
+ylab = paste("Axis 2 (X%)")
+
+MDSxy.acro <- data.frame(pcoa_acro$points) %>% 
+  rownames_to_column(var = "sample_name") %>% 
+  left_join(., meta)# %>% 
+ #  mutate(catBleaching = as.factor(catBleaching)) %>% 
+ # filter(!(Vial %in% outlier_samples)) 
+
+acroPCA <- MDSxy.acro %>%
+  filter(Reef != "NA") %>% 
+ # mutate(Reef = fct_relevel(Reef, reef_order)) %>%
+  ggplot(aes(X1, X2, fill = Reef)) + 
+  geom_point(alpha = 1, shape = 21, size = 3) + 
+  scale_fill_viridis_d(option = "magma", direction = -1)+ 
+#  scale_fill_manual(values = reef_pal) #+
+ theme(legend.position = "none", aspect.ratio = 1, text = element_text(size = 15))
+
+acroPCA
 ```
 
 
@@ -878,7 +940,7 @@ shared_seqs_iso <- shared_seqs_iso %>%
   select(sample_name)
 ```
 
-Host tree
+### 3.1.1 Host tree
 
 ```{r}
 load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_Isopora_CS_2024/Isopora/iso_gen.RData") #load host data
@@ -897,10 +959,10 @@ length(indNames(iso_gen))          # Before 189
 length(indNames(iso_gen_subset))   # After 188
 
 #Compute the pairwise distances between multivariate observations; used on raw allele frequencies.
-host_shared_dist <- dist(iso_gen_subset, method = "euclidean") #calculate euclidean distance 
+host_shared_dist_iso <- dist(iso_gen_subset, method = "euclidean") #calculate euclidean distance 
 
 # convert the distance matrix to a dist object
-host_dist_matrix <- as.dist(host_shared_dist)
+host_dist_matrix_iso <- as.dist(host_shared_dist_iso)
 
 #Create a matrix with only common sample names for symbioant
 seqs_wide_symbioant <- seq_data_iso %>%
@@ -922,12 +984,11 @@ du_iso_symbioant <- k_unidist_symbioant[, , "d_0.5"]
 dist_iso_symbioant <- as.dist(du_iso_symbioant, diag = FALSE)
 ```
 
-# Symbioant Tree 
-
+### 3.1.2 Symbioant Tree 
 
 ```{r}
 #convert host (H) and symbiont (P) distance trees as data matrices
-H.dist_iso <- host_dist_matrix %>% as.matrix()
+H.dist_iso <- host_dist_matrix_iso %>% as.matrix()
 P.dist_iso <- dist_iso_symbioant %>% as.matrix() 
 ```
 
@@ -952,7 +1013,7 @@ dim(P.dist_iso)
 dim(H.dist_iso)
 ```
 
-### Perform Paco analysis
+### 3.1.3 Perform Paco analysis
 
 ```{r, include = FALSE}
 # Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont. 
@@ -982,7 +1043,7 @@ Quantiles of Procrustes errors:
 166.5647 262.5309 276.9388 319.7066 392.3467
 *sum of squares here is ridiculous (over 1 million)*
 
-### Isopora procrustes plot
+### 3.1.4 Isopora procrustes plot
 
 ```{r}
 #transfer PC coords into dataframe for plotting  
@@ -1015,4 +1076,307 @@ procrust.iso <- ggplot(hp.df.iso2) +
   theme(aspect.ratio = 1) 
 
 save(procrust.iso, file = "procrust.iso.RData")
+```
+
+## 3.2 Montipora
+```{r}
+#here is the subset with the data that matches the host data
+shared_seqs_monti <- inner_join(monti_seqs_host, seq_data_monti, by = "sample_name")
+
+seq_data_monti %>% 
+  distinct(sample_name) %>% 
+  nrow()
+ #should be 187 in the symbioant
+
+shared_seqs_monti <- shared_seqs_monti %>% 
+  select(sample_name)
+```
+
+### 3.2.1 Host tree
+
+```{r}
+load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_montipora_CS_2024/montipora/monti_gen.RData") #load host data
+
+library(adegenet) #install required package
+library(poppr)
+
+
+# Check your individual names in monti_gen
+ind_names_host_monti <- indNames(monti_gen)
+
+# Subset the genind object to retain only matching individuals
+monti_gen_subset <- monti_gen[ind_names_host %in% shared_seqs_monti$sample_name, ]
+
+length(indNames(monti_gen))          # Before 189
+length(indNames(monti_gen_subset))   # After 188
+
+#Compute the pairwise distances between multivariate observations; used on raw allele frequencies.
+host_shared_dist_monti <- dist(monti_gen_subset, method = "euclidean") #calculate euclidean distance 
+
+# convert the distance matrix to a dist object
+host_dist_matrix_monti <- as.dist(host_shared_dist_monti)
+
+#Create a matrix with only common sample names for symbioant
+seqs_wide_symbioant <- seq_data_monti %>%
+  select(sample_name, name, value) %>%
+  filter(sample_name %in% shared_seqs_monti$sample_name) %>% 
+  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
+  tibble::column_to_rownames(var = "sample_name") #187 samples
+
+#k_tree_monti_symbioant <- kdist_monti_symbioant %>% phangorn::upgma()
+
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_monti_symbioant.RData")
+
+k_unidist_symbioant <- GUniFrac(seqs_wide_symbioant, k_tree_monti_symbioant)   #GUniFrac calculates all the distances 
+k_unidist_symbioant <- k_unidist_symbioant$unifracs
+
+
+ # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
+du_monti_symbioant <- k_unidist_symbioant[, , "d_0.5"]   
+dist_monti_symbioant <- as.dist(du_monti_symbioant, diag = FALSE)
+```
+
+### 3.2.2 Symbioant Tree 
+
+```{r}
+#convert host (H) and symbiont (P) distance trees as data matrices
+H.dist_monti <- host_dist_matrix_monti %>% as.matrix()
+P.dist_monti <- dist_monti_symbioant %>% as.matrix() 
+```
+
+```{r}
+#must have same number of dimensions 
+dim(H.dist_monti)
+dim(P.dist_monti) #its really odd that the symbioant has 186 when the code running above has 187 sample names
+
+# Subset to only the samples that are in both datasets
+intersect_samples_row_monti <- intersect(rownames(H.dist_monti), rownames(P.dist_monti))
+intersect_samples_col_monti <- intersect(colnames(H.dist_monti), colnames(P.dist_monti)) # The host data set had 189, and the symbioant had 186
+P.dist_intersect_monti <- P.dist[intersect_samples_row_monti, intersect_samples_col_monti]
+H.dist_intersect_monti <- H.dist[intersect_samples_row_monti, intersect_samples_col_monti ]
+
+# Subset to only the samples that are in both datasets
+intersect_samples_monti <- intersect(rownames(H.dist_intersect_monti), rownames(P.dist_intersect_monti))
+P.dist_monti <- P.dist_intersect_monti
+H.dist_monti <- H.dist_intersect_monti
+
+#recheck dimensions - all good 
+dim(P.dist_monti)
+dim(H.dist_monti)
+```
+
+### 3.1.3 Perform Paco analysis
+
+```{r, include = FALSE}
+# Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont. 
+
+paco.monti <- procrustes(H.dist, P.dist, symmetric = FALSE)
+summary(paco.monti)
+
+#symmetric = FALSE: This specifies that the Procrustes rotation can be non-orthogonal (i.e. generalised), meaning that it can include scaling and shearing transformations in addition to rotation and reflection. This allows for more flexible alignment between the two dissimilarity matrices, but may result in a less interpretable or meaningful alignment depending on the nature of the data.
+
+
+#statistics check for residuals 
+#paco error chart 
+plot(paco.monti, kind = 1, type = "text")
+
+#show paco residuals. higher numbers mean these are the samples that have high dissimilarity between the symbiont and host trees
+plot(paco.monti, kind = 2, type = "text")
+```
+
+Number of objects: 186    Number of dimensions: 186 
+
+Procrustes sum of squares:  
+ 1.563793e+07 
+Procrustes root mean squared error: 
+ 289.9567 
+Quantiles of Procrustes errors:
+     Min       1Q   Median       3Q      Max 
+166.5647 262.5309 276.9388 319.7066 392.3467
+*sum of squares here is ridiculous (over 1 million)*
+
+### 3.2.4 montipora procrustes plot
+
+```{r}
+#transfer PC coords into dataframe for plotting  
+hp.df.monti <- data.frame(rda1=paco.monti$Yrot[,1],
+rda2=paco.monti$Yrot[,2],xrda1=paco.monti$X[,1],
+xrda2=paco.monti$X[,2]) %>% 
+  tibble::rownames_to_column(var = "Vial") 
+
+
+#filter metadata to just reef
+meta.reef <- meta_monti %>% 
+  select(sample_name, Reef) %>% 
+  rename(sample_name = "Vial")
+
+#left join the metadata to get reef into the dataframe 
+hp.df.monti2 <- hp.df.monti %>% left_join(meta.reef)
+
+#create plot 
+procrust.monti <- ggplot(hp.df.monti2) +
+  geom_segment(aes(x=rda1,y=rda2,xend=xrda1,yend=xrda2), size = .2) +
+  geom_point(aes(x=rda1, y=rda2, shape = "Host", color = Reef)) +
+  geom_point(aes(x=xrda1, y=xrda2, shape = "Symbiont", color = Reef)) +
+  scale_shape_manual(name = "Groups", 
+                     values = c("Host" = 19, "Symbiont" = 17)) +
+  scale_colour_manual(values = reef_pal2) +
+    theme(legend.position = "none") +
+  theme(plot.background = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank()) +
+  theme(aspect.ratio = 1) 
+
+save(procrust.monti, file = "procrust.monti.RData")
+```
+## 3.3 Acropora
+```{r}
+#here is the subset with the data that matches the host data
+shared_seqs_acro <- inner_join(acro_seqs_host, seq_data_acro, by = "sample_name")
+
+seq_data_acro %>% 
+  distinct(sample_name) %>% 
+  nrow()
+ #should be 187 in the symbioant
+
+shared_seqs_acro <- shared_seqs_acro %>% 
+  select(sample_name)
+```
+
+### 3.3.1 Host tree
+
+```{r}
+load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_acropora_CS_2024/acropora/acro_gen.RData") #load host data
+
+library(adegenet) #install required package
+library(poppr)
+
+
+# Check your individual names in acro_gen
+ind_names_host_acro <- indNames(acro_gen)
+
+# Subset the genind object to retain only matching individuals
+acro_gen_subset <- acro_gen[ind_names_host %in% shared_seqs_acro$sample_name, ]
+
+length(indNames(acro_gen))          # Before 189
+length(indNames(acro_gen_subset))   # After 188
+
+#Compute the pairwise distances between multivariate observations; used on raw allele frequencies.
+host_shared_dist_acro <- dist(acro_gen_subset, method = "euclidean") #calculate euclidean distance 
+
+# convert the distance matrix to a dist object
+host_dist_matrix_acro <- as.dist(host_shared_dist_acro)
+
+#Create a matrix with only common sample names for symbioant
+seqs_wide_symbioant <- seq_data_acro %>%
+  select(sample_name, name, value) %>%
+  filter(sample_name %in% shared_seqs_acro$sample_name) %>% 
+  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
+  tibble::column_to_rownames(var = "sample_name") #187 samples
+
+#k_tree_acro_symbioant <- kdist_acro_symbioant %>% phangorn::upgma()
+
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_acro_symbioant.RData")
+
+k_unidist_symbioant <- GUniFrac(seqs_wide_symbioant, k_tree_acro_symbioant)   #GUniFrac calculates all the distances 
+k_unidist_symbioant <- k_unidist_symbioant$unifracs
+
+
+ # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
+du_acro_symbioant <- k_unidist_symbioant[, , "d_0.5"]   
+dist_acro_symbioant <- as.dist(du_acro_symbioant, diag = FALSE)
+```
+
+### 3.3.2 Symbioant Tree 
+
+```{r}
+#convert host (H) and symbiont (P) distance trees as data matrices
+H.dist_acro <- host_dist_matrix_acro %>% as.matrix()
+P.dist_acro <- dist_acro_symbioant %>% as.matrix() 
+```
+
+```{r}
+#must have same number of dimensions 
+dim(H.dist_acro)
+dim(P.dist_acro) #its really odd that the symbioant has 186 when the code running above has 187 sample names
+
+# Subset to only the samples that are in both datasets
+intersect_samples_row_acro <- intersect(rownames(H.dist_acro), rownames(P.dist_acro))
+intersect_samples_col_acro <- intersect(colnames(H.dist_acro), colnames(P.dist_acro)) # The host data set had 189, and the symbioant had 186
+P.dist_intersect_acro <- P.dist[intersect_samples_row_acro, intersect_samples_col_acro]
+H.dist_intersect_acro <- H.dist[intersect_samples_row_acro, intersect_samples_col_acro ]
+
+# Subset to only the samples that are in both datasets
+intersect_samples_acro <- intersect(rownames(H.dist_intersect_acro), rownames(P.dist_intersect_acro))
+P.dist_acro <- P.dist_intersect_acro
+H.dist_acro <- H.dist_intersect_acro
+
+#recheck dimensions - all good 
+dim(P.dist_acro)
+dim(H.dist_acro)
+```
+
+### 3.1.3 Perform Paco analysis
+
+```{r, include = FALSE}
+# Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont. 
+
+paco.acro <- procrustes(H.dist, P.dist, symmetric = FALSE)
+summary(paco.acro)
+
+#symmetric = FALSE: This specifies that the Procrustes rotation can be non-orthogonal (i.e. generalised), meaning that it can include scaling and shearing transformations in addition to rotation and reflection. This allows for more flexible alignment between the two dissimilarity matrices, but may result in a less interpretable or meaningful alignment depending on the nature of the data.
+
+
+#statistics check for residuals 
+#paco error chart 
+plot(paco.acro, kind = 1, type = "text")
+
+#show paco residuals. higher numbers mean these are the samples that have high dissimilarity between the symbiont and host trees
+plot(paco.acro, kind = 2, type = "text")
+```
+
+Number of objects: 186    Number of dimensions: 186 
+
+Procrustes sum of squares:  
+ 1.563793e+07 
+Procrustes root mean squared error: 
+ 289.9567 
+Quantiles of Procrustes errors:
+     Min       1Q   Median       3Q      Max 
+166.5647 262.5309 276.9388 319.7066 392.3467
+*sum of squares here is ridiculous (over 1 million)*
+
+### 3.1.4 acropora procrustes plot
+
+```{r}
+#transfer PC coords into dataframe for plotting  
+hp.df.acro <- data.frame(rda1=paco.acro$Yrot[,1],
+rda2=paco.acro$Yrot[,2],xrda1=paco.acro$X[,1],
+xrda2=paco.acro$X[,2]) %>% 
+  tibble::rownames_to_column(var = "Vial") 
+
+
+#filter metadata to just reef
+meta.reef <- meta_acro %>% 
+  select(sample_name, Reef) %>% 
+  rename(sample_name = "Vial")
+
+#left join the metadata to get reef into the dataframe 
+hp.df.acro2 <- hp.df.acro %>% left_join(meta.reef)
+
+#create plot 
+procrust.acro <- ggplot(hp.df.acro2) +
+  geom_segment(aes(x=rda1,y=rda2,xend=xrda1,yend=xrda2), size = .2) +
+  geom_point(aes(x=rda1, y=rda2, shape = "Host", color = Reef)) +
+  geom_point(aes(x=xrda1, y=xrda2, shape = "Symbiont", color = Reef)) +
+  scale_shape_manual(name = "Groups", 
+                     values = c("Host" = 19, "Symbiont" = 17)) +
+  scale_colour_manual(values = reef_pal2) +
+    theme(legend.position = "none") +
+  theme(plot.background = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank()) +
+  theme(aspect.ratio = 1) 
+
+save(procrust.acro, file = "procrust.acro.RData")
 ```
