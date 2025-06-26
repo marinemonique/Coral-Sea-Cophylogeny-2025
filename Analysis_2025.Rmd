@@ -53,7 +53,6 @@ seqs_monti <- read_tsv("seqs.abs.monti.txt") %>%
   mutate(sample_name = as.factor(sample_name)) %>% 
   filter(!grepl("-20", sample_name) & !grepl("b", sample_name))
 
-seqs_monti
 
 seqs_iso <- read_tsv("seqs.abs.Isopora.txt") %>% 
     filter(!(is.na(sample_name))) %>%
@@ -61,7 +60,6 @@ seqs_iso <- read_tsv("seqs.abs.Isopora.txt") %>%
   mutate(sample_name = as.factor(sample_name)) %>% 
   filter(!grepl("-20", sample_name) & !grepl("b", sample_name))
 
-seqs_iso
 
 seqs_acro <- read_tsv("seqs.abs.acro.txt") %>% 
     filter(!(is.na(sample_name))) %>%
@@ -69,7 +67,6 @@ seqs_acro <- read_tsv("seqs.abs.acro.txt") %>%
   mutate(sample_name = as.factor(sample_name)) %>% 
   filter(!grepl("-20", sample_name) & !grepl("b", sample_name))
 
-seqs_acro
 ```
 
 
@@ -252,7 +249,7 @@ all_pal['non-profile sequences'] <- "#808080"
 
 # Join profiles and sequence data together into single dataframe and add more metadata
 all_data_monti <- rbind(seqs_long_monti, profile_data_monti) 
-
+save(all_data_monti, file = "all_data_monti.RData")
 ```
 
 
@@ -332,6 +329,7 @@ profile_data_iso <- rbind(profiles_long_iso, residual_iso) %>%
 
 # Join profiles and sequence data together into single dataframe and add more metadata
 all_data_iso <- rbind(seqs_long_iso, profile_data_iso) 
+save(all_data_iso, file = "all_data_iso.RData")
 ```
 
 ```{r}
@@ -428,6 +426,7 @@ profile_data_acro <- rbind(profiles_long_acro, residual_acro) %>%
 # Join profiles and sequence data together into single dataframe and add more metadata
 all_data_acro <- rbind(seqs_long_acro, profile_data_acro) 
 
+save(all_data_acro, file = "all_data_acro.RData")
 ```
 
 Palettes - not sure necessary
@@ -914,12 +913,15 @@ acroPCA
 
 
 # 3 Procrustes
+implemented in symmetric mode, and calculated the residuals for each link. A P-value < 0.05 indicates a cophylogenetic signal between the coral host and Symbiodiniaceae, with both a P-value < 0.05 and an R2 close to 1 reflecting strong phylogenetic consistency between the two (Perez-Lamarque & Morlon, 2024). The
+phylogenetic trees of Cladocopium spp. and Durusdinium spp.
+were constructed using ITS2 profile Unifrac dissimilarity as a distance metric (Starko et al., 2023). Furthermore, the residual differences in the association between Robusta and Complexa with
+Symbiodiniaceae were analyzed using a t-test
 ## 3.1 Isopora
 
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/ind_coords_iso.RData")
-iso_seqs_host <- ind_coords_iso %>% 
-  mutate("sample_name" = VialID)
+
+
 
 #code for defining specific colours per reef for procrustes plots later on
 reef_pal2 <- c("#ac1917", "#e54a50", "#b75420", "#ea8553", "#c0982b", "#eec76b", "#768b45", "#a9be77", "#B2DFDB", "#4eaaa6", "#00798C")
@@ -930,7 +932,16 @@ names(reef_pal2) <- reef_names
 ```
 
 ```{r}
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/ind_coords_iso.RData")
+iso_seqs_host <- ind_coords_iso %>% 
+  mutate("sample_name" = VialID)
+
 #here is the subset with the data that matches the host data
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/all_data_iso.RData")
+seq_data_iso <- all_data_iso %>% 
+  filter(!str_detect(name, "non")) %>% 
+  filter(!str_detect(name, "p_"))
+
 shared_seqs_iso <- inner_join(iso_seqs_host, seq_data_iso, by = "sample_name")
 
 seq_data_iso %>% 
@@ -1020,7 +1031,11 @@ dim(H.dist_iso)
 # Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont. 
 
 paco.iso <- procrustes(H.dist_iso, P.dist_iso, symmetric = FALSE)
+
+paco.iso2 <- procrustes(H.dist_iso, P.dist_iso, symmetric = TRUE)
 summary(paco.iso)
+
+summary(paco.iso2)
 
 #symmetric = FALSE: This specifies that the Procrustes rotation can be non-orthogonal (i.e. generalised), meaning that it can include scaling and shearing transformations in addition to rotation and reflection. This allows for more flexible alignment between the two dissimilarity matrices, but may result in a less interpretable or meaningful alignment depending on the nature of the data.
 
@@ -1044,15 +1059,36 @@ Quantiles of Procrustes errors:
 166.5647 262.5309 276.9388 319.7066 392.3467
 *sum of squares here is ridiculous (over 1 million)*
 
+##### Symmetric = TRUE
+Call:
+procrustes(X = H.dist_iso, Y = P.dist_iso, symmetric = TRUE) 
+
+Number of objects: 186    Number of dimensions: 186 
+
+Procrustes sum of squares:  
+ 0.8709314 
+Procrustes root mean squared error: 
+ 0.06842826 
+Quantiles of Procrustes errors:
+       Min         1Q     Median         3Q        Max 
+0.03930838 0.06195592 0.06535609 0.07544908 0.09259175 
+
+
 ### 3.1.4 Isopora procrustes plot
 
 ```{r}
 #transfer PC coords into dataframe for plotting  
-hp.df.iso <- data.frame(rda1=paco.iso$Yrot[,1],
-rda2=paco.iso$Yrot[,2],xrda1=paco.iso$X[,1],
-xrda2=paco.iso$X[,2]) %>% 
+hp.df.iso <- data.frame(rda1=paco.iso2$Yrot[,1],
+rda2=paco.iso2$Yrot[,2],xrda1=paco.iso2$X[,1],
+xrda2=paco.iso2$X[,2]) %>% 
   tibble::rownames_to_column(var = "Vial") 
 
+library(readxl)
+#Vial is the unique genotype for each coral sample. 
+CoralSea2024_Metadata <- read_excel("CoralSea2024_Metadata.xlsx")
+meta <- CoralSea2024_Metadata %>% 
+  rename("VialID" = "sample_name",
+         "Depth (m)"= "Depth")
 
 #filter metadata to just reef
 meta.reef <- meta %>% 
@@ -1076,7 +1112,7 @@ procrust.iso <- ggplot(hp.df.iso2) +
     panel.grid.major = element_blank()) +
   theme(aspect.ratio = 1) 
 
-save(procrust.iso, file = "procrust.iso.RData")
+save(procrust.iso, file = "procrust.iso2.RData")
 ```
 
 ## 3.2 Montipora
@@ -1084,6 +1120,11 @@ save(procrust.iso, file = "procrust.iso.RData")
 load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/ind_coords_monti.RData")
 monti_seqs_host <- ind_coords_monti %>% 
   mutate("sample_name" = VialID)
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/all_data_monti.RData")
+seq_data_monti <- all_data_monti %>% 
+  filter(!str_detect(name, "non")) %>% 
+  filter(!str_detect(name, "p_"))
+
 #here is the subset with the data that matches the host data
 shared_seqs_monti <- inner_join(monti_seqs_host, seq_data_monti, by = "sample_name")
 
@@ -1100,6 +1141,7 @@ shared_seqs_monti <- shared_seqs_monti %>%
 
 ```{r}
 load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/monti_gen.RData") #load host data
+
 
 library(adegenet) #install required package
 library(poppr)
@@ -1131,12 +1173,9 @@ seqs_wide_symbioant <- seq_data_monti %>%
 
 load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_monti_symbioant.RData")
 
-k_unidist_symbioant <- GUniFrac(seqs_wide_symbioant, k_tree_monti_symbioant)   #GUniFrac calculates all the distances 
-k_unidist_symbioant <- k_unidist_symbioant$unifracs
-
 
  # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
-du_monti_symbioant <- k_unidist_symbioant[, , "d_0.5"]   
+du_monti_symbioant <- kdist_monti_symbioant[, , "d_0.5"]   
 dist_monti_symbioant <- as.dist(du_monti_symbioant, diag = FALSE)
 ```
 
@@ -1226,6 +1265,8 @@ save(procrust.monti, file = "procrust.monti.RData")
 ```
 ## 3.3 Acropora
 ```{r}
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/all_data_acro.RData")
+
 #here is the subset with the data that matches the host data
 shared_seqs_acro <- inner_join(acro_seqs_host, seq_data_acro, by = "sample_name")
 
@@ -1242,6 +1283,10 @@ shared_seqs_acro <- shared_seqs_acro %>%
 
 ```{r}
 load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/acro_gen.RData") #load host data
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/all_data_acro.RData") #load symbioant data
+seq_data_acro <- all_data_acro %>% 
+  filter(!str_detect(name, "non")) %>% 
+  filter(!str_detect(name, "p_"))
 
 library(adegenet) #install required package
 library(poppr)
