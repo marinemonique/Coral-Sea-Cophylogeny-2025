@@ -1266,6 +1266,16 @@ save(procrust.monti, file = "procrust.monti.RData")
 ## 3.3 Acropora
 ```{r}
 load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/all_data_acro.RData")
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/ind_coords_acro.RData")
+
+ind_coords_acro <- ind_coords
+acro_seqs_host <- ind_coords_acro %>% 
+  mutate("sample_name" = ind)
+
+seq_data_acro <- all_data_acro %>% 
+  filter(!str_detect(name, "non")) %>% 
+  filter(!str_detect(name, "p_"))
+
 
 #here is the subset with the data that matches the host data
 shared_seqs_acro <- inner_join(acro_seqs_host, seq_data_acro, by = "sample_name")
@@ -1273,7 +1283,7 @@ shared_seqs_acro <- inner_join(acro_seqs_host, seq_data_acro, by = "sample_name"
 seq_data_acro %>% 
   distinct(sample_name) %>% 
   nrow()
- #should be 187 in the symbioant
+ #should be 354 in the symbioant
 
 shared_seqs_acro <- shared_seqs_acro %>% 
   select(sample_name)
@@ -1298,8 +1308,8 @@ ind_names_host_acro <- indNames(acro_gen)
 # Subset the genind object to retain only matching individuals
 acro_gen_subset <- acro_gen[ind_names_host_acro %in% shared_seqs_acro$sample_name, ]
 
-length(indNames(acro_gen))          # Before 189
-length(indNames(acro_gen_subset))   # After 188
+length(indNames(acro_gen))          # Before 379
+length(indNames(acro_gen_subset))   # After 352
 
 #Compute the pairwise distances between multivariate observations; used on raw allele frequencies.
 host_shared_dist_acro <- dist(acro_gen_subset, method = "euclidean") #calculate euclidean distance 
@@ -1308,22 +1318,23 @@ host_shared_dist_acro <- dist(acro_gen_subset, method = "euclidean") #calculate 
 host_dist_matrix_acro <- as.dist(host_shared_dist_acro)
 
 #Create a matrix with only common sample names for symbioant
-seqs_wide_symbioant <- seq_data_acro %>%
+seqs_wide_symbioant_acro <- seq_data_acro %>%
   select(sample_name, name, value) %>%
   filter(sample_name %in% shared_seqs_acro$sample_name) %>% 
   pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
-  tibble::column_to_rownames(var = "sample_name") #187 samples
-
-#k_tree_acro_symbioant <- kdist_acro_symbioant %>% phangorn::upgma()
+  tibble::column_to_rownames(var = "sample_name") #379 samples
 
 load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_acro_symbioant.RData")
+#k_tree_acro_symbioant <- kdist_acro_symbioant %>% phangorn::upgma()
 
-k_unidist_symbioant <- GUniFrac(seqs_wide_symbioant, k_tree_acro_symbioant)   #GUniFrac calculates all the distances 
-k_unidist_symbioant <- k_unidist_symbioant$unifracs
+
+
+k_unidist_symbioant_acro <- GUniFrac(seqs_wide_symbioant_acro, k_tree_acro_symbioant)   #GUniFrac calculates all the distances 
+k_unidist_symbioant_acro <- k_unidist_symbioant_acro$unifracs
 
 
  # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
-du_acro_symbioant <- k_unidist_symbioant[, , "d_0.5"]   
+du_acro_symbioant <- k_unidist_symbioant_acro[, , "d_0.5"]   
 dist_acro_symbioant <- as.dist(du_acro_symbioant, diag = FALSE)
 ```
 
@@ -1343,8 +1354,8 @@ dim(P.dist_acro) #its really odd that the symbioant has 186 when the code runnin
 # Subset to only the samples that are in both datasets
 intersect_samples_row_acro <- intersect(rownames(H.dist_acro), rownames(P.dist_acro))
 intersect_samples_col_acro <- intersect(colnames(H.dist_acro), colnames(P.dist_acro)) # The host data set had 189, and the symbioant had 186
-P.dist_intersect_acro <- P.dist[intersect_samples_row_acro, intersect_samples_col_acro]
-H.dist_intersect_acro <- H.dist[intersect_samples_row_acro, intersect_samples_col_acro ]
+P.dist_intersect_acro <- P.dist_acro[intersect_samples_row_acro, intersect_samples_col_acro]
+H.dist_intersect_acro <- H.dist_acro[intersect_samples_row_acro, intersect_samples_col_acro ]
 
 # Subset to only the samples that are in both datasets
 intersect_samples_acro <- intersect(rownames(H.dist_intersect_acro), rownames(P.dist_intersect_acro))
@@ -1361,7 +1372,9 @@ dim(H.dist_acro)
 ```{r, include = FALSE}
 # Perform Procrustes analysis. logical that symbionts depend on the host. so X = host and Y = symbiont. 
 
-paco.acro <- procrustes(H.dist_acro, P.dist_acro, symmetric = FALSE)
+paco.acro <- procrustes(H.dist_acro, P.dist_acro, 
+                        symmetric = TRUE)
+#or symmetric = FALSE
 summary(paco.acro)
 
 #symmetric = FALSE: This specifies that the Procrustes rotation can be non-orthogonal (i.e. generalised), meaning that it can include scaling and shearing transformations in addition to rotation and reflection. This allows for more flexible alignment between the two dissimilarity matrices, but may result in a less interpretable or meaningful alignment depending on the nature of the data.
@@ -1375,6 +1388,18 @@ plot(paco.acro, kind = 1, type = "text")
 plot(paco.acro, kind = 2, type = "text")
 ```
 
+Call:
+procrustes(X = H.dist_acro, Y = P.dist_acro, symmetric = TRUE) 
+
+Number of objects: 352    Number of dimensions: 352 
+
+Procrustes sum of squares:  
+ 0.6773117 
+Procrustes root mean squared error: 
+ 0.04386549 
+Quantiles of Procrustes errors:
+       Min         1Q     Median         3Q        Max 
+0.01519683 0.02146343 0.02531260 0.03446136 0.15723155 
 
 
 ### 3.1.4 acropora procrustes plot
@@ -1386,6 +1411,12 @@ rda2=paco.acro$Yrot[,2],xrda1=paco.acro$X[,1],
 xrda2=paco.acro$X[,2]) %>% 
   tibble::rownames_to_column(var = "Vial") 
 
+#code for defining specific colours per reef for procrustes plots later on
+reef_pal2 <- c("#ac1917", "#e54a50", "#b75420", "#ea8553", "#c0982b", "#eec76b", "#768b45", "#a9be77", "#B2DFDB", "#4eaaa6", "#00798C")
+
+reef_names <- c("Elizabeth", "Middleton", "Cato", "Wreck", "Kenn", "Mellish", "Marion","Frederick", "Saumarez", "Madgelaine", "NA")
+
+names(reef_pal2) <- reef_names
 
 #filter metadata to just reef
 meta.reef <- meta %>% 
