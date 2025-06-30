@@ -5,7 +5,6 @@ date: "25/04/2025"
 output: html_document
 ---
 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -419,6 +418,10 @@ save(all_data_acro, file = "all_data_acro.RData")
 ###4.1.1 Monti Distance Matrix
 
 ```{r}
+seq_data_monti <- all_data_monti %>% 
+  filter(!str_detect(name, "non")) %>% 
+  filter(!str_detect(name, "p_"))
+
 fasta_monti <- read_fasta_df("seqs.monti.fasta") %>% 
   filter(label %in% seqs_long_monti$name) %>%   #only keeping DNA seqs that appear in seqs_long subset 
   deframe() %>%
@@ -452,7 +455,7 @@ head(seqs_wide_monti)
 #k_unidist_monti <- GUniFrac(seqs_wide_monti, k_tree_monti)   #GUniFrac calculates all the distances 
 #k_unidist_monti <- k_unidist_monti$unifracs
 
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/k_unidist_monti.RData")
+load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_monti_symbioant.RData")
 
 # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
 du_monti <- k_unidist_monti[, , "d_0.5"]   
@@ -485,6 +488,10 @@ save(k_tree_iso_symbioant, file = "kdist_iso_symbioant.RData")
 
 
 ```{r}
+seq_data_iso <- all_data_iso %>% 
+  filter(!str_detect(name, "non")) %>% 
+  filter(!str_detect(name, "p_"))
+
 seqs_wide_iso_symbioant <- seq_data_iso %>%
   dplyr::select(sample_name, name, value) %>%
   pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
@@ -536,11 +543,7 @@ save(k_tree_acro_symbioant, file = "kdist_acro_symbioant.RData")
 
 ```{r}
 load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_acro_symbioant.RData")
-```
 
-
-
-```{r}
 seqs_wide_acro_symbioant <- seq_data_acro %>%
   dplyr::select(sample_name, name, value) %>%
   pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
@@ -674,12 +677,10 @@ implemented in symmetric mode, and calculated the residuals for each link. A P-v
 phylogenetic trees of Cladocopium spp. and Durusdinium spp.
 were constructed using ITS2 profile Unifrac dissimilarity as a distance metric (Starko et al., 2023). Furthermore, the residual differences in the association between Robusta and Complexa with
 Symbiodiniaceae were analyzed using a t-test
+
 ## 3.1 Isopora
 
 ```{r}
-
-
-
 #code for defining specific colours per reef for procrustes plots later on
 reef_pal2 <- c("#ac1917", "#e54a50", "#b75420", "#ea8553", "#c0982b", "#eec76b", "#768b45", "#a9be77", "#B2DFDB", "#4eaaa6", "#00798C")
 
@@ -929,11 +930,10 @@ seqs_wide_symbioant <- seq_data_monti %>%
 #k_tree_monti_symbioant <- kdist_monti_symbioant %>% phangorn::upgma()
 
 load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_monti_symbioant.RData")
-
-
- # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
-du_monti_symbioant <- kdist_monti_symbioant[, , "d_0.5"]   
+# GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
+du_monti_symbioant <- k_unidist_monti[, , "d_0.5"]   
 dist_monti_symbioant <- as.dist(du_monti_symbioant, diag = FALSE)
+
 ```
 
 ### 3.2.2 Symbioant Tree 
@@ -952,8 +952,8 @@ dim(P.dist_monti) #its really odd that the symbioant has 186 when the code runni
 # Subset to only the samples that are in both datasets
 intersect_samples_row_monti <- intersect(rownames(H.dist_monti), rownames(P.dist_monti))
 intersect_samples_col_monti <- intersect(colnames(H.dist_monti), colnames(P.dist_monti)) # The host data set had 189, and the symbioant had 186
-P.dist_intersect_monti <- P.dist[intersect_samples_row_monti, intersect_samples_col_monti]
-H.dist_intersect_monti <- H.dist[intersect_samples_row_monti, intersect_samples_col_monti ]
+P.dist_intersect_monti <- P.dist_monti[intersect_samples_row_monti, intersect_samples_col_monti]
+H.dist_intersect_monti <- H.dist_monti[intersect_samples_row_monti, intersect_samples_col_monti ]
 
 # Subset to only the samples that are in both datasets
 intersect_samples_monti <- intersect(rownames(H.dist_intersect_monti), rownames(P.dist_intersect_monti))
@@ -1017,6 +1017,8 @@ procrust.monti <- ggplot(hp.df.monti2) +
     panel.grid.minor = element_blank(),
     panel.grid.major = element_blank()) +
   theme(aspect.ratio = 1) 
+
+procrust.monti
 
 save(procrust.monti, file = "procrust.monti.RData")
 ```
