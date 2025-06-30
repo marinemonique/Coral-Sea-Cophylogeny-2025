@@ -410,12 +410,13 @@ save(all_data_acro, file = "all_data_acro.RData")
 
 
 
-# 2 PCoAs
+# PCoAs
 **Here we are running a PCoA on UniFrac distances for the X communities associated with X different host groups (Isopora, Montipora spp., Acropora humulis) to look for patterns by reef in symbiont community structure** 
 
-##4.1Creating the Distance matrix because UPGMA is not working
 
-###4.1.1 Monti Distance Matrix
+
+##Create distance matrix for symbioants
+### 4.1.1 Montipora Distance Matrix
 
 ```{r}
 seq_data_monti <- all_data_monti %>% 
@@ -465,7 +466,7 @@ dist_monti_symbioant <- dist_monti
 
 ```
 
-###4.1.2 Isopora Distance Matrix
+### 4.1.2 Isopora Distance Matrix
 
 ```{r eval=FALSE}
 fasta_iso_symbioant <- read_fasta_df("seqs.isopora.fasta") %>% 
@@ -500,7 +501,7 @@ seqs_wide_iso_symbioant <- seq_data_iso %>%
 head(seqs_wide_iso_symbioant)
 ```
 
-###1.1.2. GUniFrac and Kdist Matrix
+
 ```{r}
 load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_iso_symbioant.RData")
 k_unidist_iso_symbioant <- GUniFrac(seqs_wide_iso_symbioant, k_tree_iso_symbioant)   #GUniFrac calculates all the distances 
@@ -512,7 +513,7 @@ du_iso_symbioant <- k_unidist_iso_symbioant[, , "d_0.5"]
 dist_iso_symbioant <- as.dist(du_iso_symbioant, diag = FALSE)
 ```
 
-##4.1.3 Acropora Symbioant Distance Matrix
+### 4.1.3 Acropora Symbioant Distance Matrix
 
 ```{r}
 seq_data_acro <- all_data_acro %>% 
@@ -552,7 +553,7 @@ seqs_wide_acro_symbioant <- seq_data_acro %>%
 head(seqs_wide_acro_symbioant)
 ```
 
-###1.1.2. GUniFrac and Kdist Matrix
+GUniFrac and Kdist Matrix
 ```{r}
 k_unidist_acro_symbioant <- GUniFrac(seqs_wide_acro_symbioant, k_tree_acro_symbioant)   #GUniFrac calculates all the distances 
 k_unidist_acro_symbioant <- k_unidist_acro_symbioant$unifracs
@@ -567,9 +568,9 @@ hclust_samps_acro_symbioant <- upgma(du_acro_symbioant)
 ```
 
 
-##4.1 PCoA by Reef
+##4.2 PCoA by Reef
 
-###4.1.1 Isopora Reef PCoA
+###4.2.1 Isopora Reef PCoA
 ```{r}
 reef_order <- meta %>% rename(`GPS S` = "Lat") %>% 
   distinct(Reef, Lat) %>%
@@ -611,7 +612,7 @@ isoPCA <- MDSxy.iso %>%
 isoPCA
 ```
 
-# 2.2 Montipora
+### 4.2.2 Montipora
 ```{r}
 pcoa_monti <- cmdscale(dist_monti_symbioant, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
 
@@ -644,7 +645,7 @@ montiPCA <- MDSxy.monti %>%
 montiPCA
 ```
 
-##2.3 Acropora
+###4.2.3 Acropora
 ```{r}
 pcoa_acro <- cmdscale(dist_acro_symbioant, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
 
@@ -878,6 +879,9 @@ procrust.iso <- ggplot(hp.df.iso2) +
 
 save(procrust.iso, file = "procrust.iso2.RData")
 ```
+```{r}
+procrust.iso
+```
 
 ## 3.2 Montipora
 ```{r}
@@ -902,7 +906,7 @@ shared_seqs_monti <- shared_seqs_monti %>%
 ```
 
 ### 3.2.1 Host tree
-
+*note the step for calculating the host_shared_dist_matrix - this is the line we may need to change to get the procrustes looking a bit less like a straight line*
 ```{r}
 load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/monti_gen.RData") #load host data
 
@@ -917,8 +921,8 @@ ind_names_host_monti <- indNames(monti_gen)
 # Subset the genind object to retain only matching individuals
 monti_gen_subset <- monti_gen[ind_names_host_monti %in% shared_seqs_monti$sample_name, ]
 
-length(indNames(monti_gen))          # Before 189
-length(indNames(monti_gen_subset))   # After 188
+length(indNames(monti_gen))          # Before 180
+length(indNames(monti_gen_subset))   # After 177
 
 #Compute the pairwise distances between multivariate observations; used on raw allele frequencies.
 host_shared_dist_monti <- dist(monti_gen_subset, method = "euclidean") #calculate euclidean distance 
@@ -1207,3 +1211,8 @@ procrust.acro <- ggplot(hp.df.acro2) +
 
 save(procrust.acro, file = "procrust.acro.RData")
 ```
+
+```{r}
+procrust.acro
+```
+
