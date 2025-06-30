@@ -1,6 +1,6 @@
 ---
 title: "Analysis_2025"
-author: "M. Marzonie" "M. White"
+author: "M. White based on M. Marzonie"
 date: "25/04/2025"
 output: html_document
 ---
@@ -585,7 +585,9 @@ pcoa_iso <- cmdscale(dist_iso_symbioant, eig = TRUE)    #this is doing 'cmds' or
 #outlier_samples <- XX
 
 ordiplot(pcoa_iso, display = 'sites', type = 'text')
-barplot (pcoa_iso$eig, names = paste ('PCoA', 1:187), las = 5, ylab = 'eigenvalues') #invalid value specified for graphical parameter "las"
+barplot (pcoa_iso$eig, names = paste ('PCoA', 1:187), 
+         #las = 5, 
+         ylab = 'eigenvalues') #invalid value specified for graphical parameter "las"
 
 # Custom x and y labels
 xlab = paste("Axis 1 (X%)")
@@ -616,7 +618,9 @@ pcoa_monti <- cmdscale(dist_monti_symbioant, eig = TRUE)    #this is doing 'cmds
 #outlier_samples <- XX
 
 ordiplot(pcoa_monti, display = 'sites', type = 'text')
-barplot (pcoa_monti$eig, names = paste ('PCoA', 1:187), las = 5, ylab = 'eigenvalues') #invalid value specified for graphical parameter "las"
+barplot (pcoa_monti$eig, names = paste ('PCoA', 1:187), 
+         #las = 5, 
+         ylab = 'eigenvalues') #invalid value specified for graphical parameter "las"
 
 # Custom x and y labels
 xlab = paste("Axis 1 (X%)")
@@ -647,7 +651,9 @@ pcoa_acro <- cmdscale(dist_acro_symbioant, eig = TRUE)    #this is doing 'cmds' 
 #outlier_samples <- XX
 
 ordiplot(pcoa_acro, display = 'sites', type = 'text')
-barplot (pcoa_acro$eig, names = paste ('PCoA', 1:187), las = 5, ylab = 'eigenvalues') #invalid value specified for graphical parameter "las"
+barplot (pcoa_acro$eig, names = paste ('PCoA', 1:354), 
+         #las = 5, 
+         ylab = 'eigenvalues') #invalid value specified for graphical parameter "las"
 
 # Custom x and y labels
 xlab = paste("Axis 1 (X%)")
