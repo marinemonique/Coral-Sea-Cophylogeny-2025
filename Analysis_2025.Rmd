@@ -2,7 +2,7 @@
 title: "Analysis_2025"
 author: "M. White based on M. Marzonie"
 date: "25/04/2025"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -415,8 +415,54 @@ save(all_data_acro, file = "all_data_acro.RData")
 
 
 
-##Create distance matrix for symbioants
-### 4.1.1 Montipora Distance Matrix
+##Create distance matrix for symbionts
+### 2.1.1 Isopora Distance Matrix
+
+```{r eval=FALSE}
+fasta_iso_symbiont <- read_fasta_df("seqs.isopora.fasta") %>% 
+  filter(label %in% seqs_long_iso$name) %>%   #only keeping DNA seqs that appear in seqs_long subset 
+  deframe() %>%
+  as_dna()
+
+#creating the tree
+kdist_iso_symbiont <- fasta_iso_symbiont %>%
+  dna_to_DNAbin() %>%
+  kdistance(k = 7, residues = "DNA", method = "edgar") %>%
+  as.matrix()
+
+k_tree_iso_symbiont <- kdist_iso_symbiont %>% phangorn::upgma()
+
+k_tree_iso_symbiont
+
+save(k_tree_iso_symbiont, file = "kdist_iso_symbiont.RData")
+```
+
+
+```{r}
+seq_data_iso <- all_data_iso %>% 
+  filter(!str_detect(name, "non")) %>% 
+  filter(!str_detect(name, "p_"))
+
+seqs_wide_iso_symbiont <- seq_data_iso %>%
+  dplyr::select(sample_name, name, value) %>%
+  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
+  tibble::column_to_rownames(var = "sample_name")
+
+#head(seqs_wide_iso_symbiont)
+```
+
+
+```{r}
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/kdist_iso_symbiont.RData")
+k_unidist_iso_symbiont <- GUniFrac(seqs_wide_iso_symbiont, k_tree_iso_symbiont)   #GUniFrac calculates all the distances 
+k_unidist_iso_symbiont <- k_unidist_iso_symbiont$unifracs
+
+
+# GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
+du_iso_symbiont <- k_unidist_iso_symbiont[, , "d_0.5"]   
+dist_iso_symbiont <- as.dist(du_iso_symbiont, diag = FALSE)
+```
+### 2.1.2 Montipora Distance Matrix
 
 ```{r}
 seq_data_monti <- all_data_monti %>% 
@@ -449,71 +495,26 @@ seqs_wide_monti <- seq_data_monti %>%
   pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
   tibble::column_to_rownames(var = "sample_name")
 
-head(seqs_wide_monti)
+#head(seqs_wide_monti)
 ```
 
 ```{r}
 #k_unidist_monti <- GUniFrac(seqs_wide_monti, k_tree_monti)   #GUniFrac calculates all the distances 
 #k_unidist_monti <- k_unidist_monti$unifracs
 
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_monti_symbioant.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/kdist_monti_symbiont.RData")
 
 # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
 du_monti <- k_unidist_monti[, , "d_0.5"]   
 dist_monti <- as.dist(du_monti, diag = FALSE)
 
-dist_monti_symbioant <- dist_monti
+dist_monti_symbiont <- dist_monti
 
 ```
 
-### 4.1.2 Isopora Distance Matrix
-
-```{r eval=FALSE}
-fasta_iso_symbioant <- read_fasta_df("seqs.isopora.fasta") %>% 
-  filter(label %in% seqs_long_iso$name) %>%   #only keeping DNA seqs that appear in seqs_long subset 
-  deframe() %>%
-  as_dna()
-
-#creating the tree
-kdist_iso_symbioant <- fasta_iso_symbioant %>%
-  dna_to_DNAbin() %>%
-  kdistance(k = 7, residues = "DNA", method = "edgar") %>%
-  as.matrix()
-
-k_tree_iso_symbioant <- kdist_iso_symbioant %>% phangorn::upgma()
-
-k_tree_iso_symbioant
-
-save(k_tree_iso_symbioant, file = "kdist_iso_symbioant.RData")
-```
 
 
-```{r}
-seq_data_iso <- all_data_iso %>% 
-  filter(!str_detect(name, "non")) %>% 
-  filter(!str_detect(name, "p_"))
-
-seqs_wide_iso_symbioant <- seq_data_iso %>%
-  dplyr::select(sample_name, name, value) %>%
-  pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
-  tibble::column_to_rownames(var = "sample_name")
-
-head(seqs_wide_iso_symbioant)
-```
-
-
-```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_iso_symbioant.RData")
-k_unidist_iso_symbioant <- GUniFrac(seqs_wide_iso_symbioant, k_tree_iso_symbioant)   #GUniFrac calculates all the distances 
-k_unidist_iso_symbioant <- k_unidist_iso_symbioant$unifracs
-
-
-# GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
-du_iso_symbioant <- k_unidist_iso_symbioant[, , "d_0.5"]   
-dist_iso_symbioant <- as.dist(du_iso_symbioant, diag = FALSE)
-```
-
-### 4.1.3 Acropora Symbioant Distance Matrix
+### 2.1.3 Acropora Symbiont Distance Matrix
 
 ```{r}
 seq_data_acro <- all_data_acro %>% 
@@ -523,54 +524,54 @@ seq_data_acro <- all_data_acro %>%
 
 Importing fasta sequences
 ```{r eval = FALSE}
-fasta_acro_symbioant <- read_fasta_df("seqs.acro.fasta") %>% 
+fasta_acro_symbiont <- read_fasta_df("seqs.acro.fasta") %>% 
   filter(label %in% seqs_long_acro$name) %>%   #only keeping DNA seqs that appear in seqs_long subset 
   deframe() %>%
   as_dna()
 
 #creating the tree
-kdist_acro_symbioant <- fasta_acro_symbioant %>%
+kdist_acro_symbiont <- fasta_acro_symbiont %>%
   dna_to_DNAbin() %>%
   kdistance(k = 7, residues = "DNA", method = "edgar") %>%
   as.matrix()
 
-k_tree_acro_symbioant <- kdist_acro_symbioant %>% phangorn::upgma()
+k_tree_acro_symbiont <- kdist_acro_symbiont %>% phangorn::upgma()
 
-k_tree_acro_symbioant
+k_tree_acro_symbiont
 
-save(k_tree_acro_symbioant, file = "kdist_acro_symbioant.RData")
+save(k_tree_acro_symbiont, file = "kdist_acro_symbiont.RData")
 
 ```
 
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_acro_symbioant.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/kdist_acro_symbiont.RData")
 
-seqs_wide_acro_symbioant <- seq_data_acro %>%
+seqs_wide_acro_symbiont <- seq_data_acro %>%
   dplyr::select(sample_name, name, value) %>%
   pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
   tibble::column_to_rownames(var = "sample_name")
 
-head(seqs_wide_acro_symbioant)
+#head(seqs_wide_acro_symbiont)
 ```
 
 GUniFrac and Kdist Matrix
 ```{r}
-k_unidist_acro_symbioant <- GUniFrac(seqs_wide_acro_symbioant, k_tree_acro_symbioant)   #GUniFrac calculates all the distances 
-k_unidist_acro_symbioant <- k_unidist_acro_symbioant$unifracs
+k_unidist_acro_symbiont <- GUniFrac(seqs_wide_acro_symbiont, k_tree_acro_symbiont)   #GUniFrac calculates all the distances 
+k_unidist_acro_symbiont <- k_unidist_acro_symbiont$unifracs
 
 
 # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
-du_acro_symbioant <- k_unidist_acro_symbioant[, , "d_0.5"]   
-dist_acro_symbioant <- as.dist(du_acro_symbioant, diag = FALSE)
+du_acro_symbiont <- k_unidist_acro_symbiont[, , "d_0.5"]   
+dist_acro_symbiont <- as.dist(du_acro_symbiont, diag = FALSE)
 
 # Cluster the samples
-hclust_samps_acro_symbioant <- upgma(du_acro_symbioant)
+hclust_samps_acro_symbiont <- upgma(du_acro_symbiont)
 ```
 
 
-##4.2 PCoA by Reef
+##2.2 PCoA by Reef
 
-###4.2.1 Isopora Reef PCoA
+###2.2.1 Isopora Reef PCoA
 ```{r}
 reef_order <- meta %>% rename(`GPS S` = "Lat") %>% 
   distinct(Reef, Lat) %>%
@@ -581,7 +582,7 @@ reef_order <- meta %>% rename(`GPS S` = "Lat") %>%
 ```
 
 ```{r}
-pcoa_iso <- cmdscale(dist_iso_symbioant, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
+pcoa_iso <- cmdscale(dist_iso_symbiont, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
 
 #outlier_samples <- XX
 
@@ -612,9 +613,9 @@ isoPCA <- MDSxy.iso %>%
 isoPCA
 ```
 
-### 4.2.2 Montipora
+### 2.2.2 Montipora
 ```{r}
-pcoa_monti <- cmdscale(dist_monti_symbioant, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
+pcoa_monti <- cmdscale(dist_monti_symbiont, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
 
 #outlier_samples <- XX
 
@@ -645,9 +646,9 @@ montiPCA <- MDSxy.monti %>%
 montiPCA
 ```
 
-###4.2.3 Acropora
+###2.2.3 Acropora
 ```{r}
-pcoa_acro <- cmdscale(dist_acro_symbioant, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
+pcoa_acro <- cmdscale(dist_acro_symbiont, eig = TRUE)    #this is doing 'cmds' or classic multidimensional scaling
 
 #outlier_samples <- XX
 
@@ -697,12 +698,12 @@ names(reef_pal2) <- reef_names
 ```
 
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/ind_coords_iso.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/ind_coords_iso.RData")
 iso_seqs_host <- ind_coords_iso %>% 
   mutate("sample_name" = VialID)
 
 #here is the subset with the data that matches the host data
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/all_data_iso.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/all_data_iso.RData")
 seq_data_iso <- all_data_iso %>% 
   filter(!str_detect(name, "non")) %>% 
   filter(!str_detect(name, "p_"))
@@ -712,7 +713,7 @@ shared_seqs_iso <- inner_join(iso_seqs_host, seq_data_iso, by = "sample_name")
 seq_data_iso %>% 
   distinct(sample_name) %>% 
   nrow()
- #should be 187 in the symbioant
+ #should be 187 in the symbiont
 
 shared_seqs_iso <- shared_seqs_iso %>% 
   select(sample_name)
@@ -721,7 +722,7 @@ shared_seqs_iso <- shared_seqs_iso %>%
 ### 3.1.1 Host tree
 
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/iso_gen.RData") #load host data
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/iso_gen.RData") #load host data
 
 library(adegenet) #install required package
 library(poppr)
@@ -742,41 +743,41 @@ host_shared_dist_iso <- dist(iso_gen_subset, method = "euclidean") #calculate eu
 # convert the distance matrix to a dist object
 host_dist_matrix_iso <- as.dist(host_shared_dist_iso)
 
-#Create a matrix with only common sample names for symbioant
-seqs_wide_symbioant <- seq_data_iso %>%
+#Create a matrix with only common sample names for symbiont
+seqs_wide_symbiont <- seq_data_iso %>%
   select(sample_name, name, value) %>%
   filter(sample_name %in% shared_seqs_iso$sample_name) %>% 
   pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
   tibble::column_to_rownames(var = "sample_name") #187 samples
 
-#k_tree_iso_symbioant <- kdist_iso_symbioant %>% phangorn::upgma()
+#k_tree_iso_symbiont <- kdist_iso_symbiont %>% phangorn::upgma()
 
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_iso_symbioant.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/kdist_iso_symbiont.RData")
 
-k_unidist_symbioant <- GUniFrac(seqs_wide_symbioant, k_tree_iso_symbioant)   #GUniFrac calculates all the distances 
-k_unidist_symbioant <- k_unidist_symbioant$unifracs
+k_unidist_symbiont <- GUniFrac(seqs_wide_symbiont, k_tree_iso_symbiont)   #GUniFrac calculates all the distances 
+k_unidist_symbiont <- k_unidist_symbiont$unifracs
 
  # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
-du_iso_symbioant <- k_unidist_symbioant[, , "d_0.5"]   
-dist_iso_symbioant <- as.dist(du_iso_symbioant, diag = FALSE)
+du_iso_symbiont <- k_unidist_symbiont[, , "d_0.5"]   
+dist_iso_symbiont <- as.dist(du_iso_symbiont, diag = FALSE)
 ```
 
-### 3.1.2 Symbioant Tree 
+### 3.1.2 Symbiont Tree 
 
 ```{r}
 #convert host (H) and symbiont (P) distance trees as data matrices
 H.dist_iso <- host_dist_matrix_iso %>% as.matrix()
-P.dist_iso <- dist_iso_symbioant %>% as.matrix() 
+P.dist_iso <- dist_iso_symbiont %>% as.matrix() 
 ```
 
 ```{r}
 #must have same number of dimensions 
 dim(H.dist_iso)
-dim(P.dist_iso) #its really odd that the symbioant has 186 when the code running above has 187 sample names
+dim(P.dist_iso) #its really odd that the symbiont has 186 when the code running above has 187 sample names
 
 # Subset to only the samples that are in both datasets
 intersect_samples_row_iso <- intersect(rownames(H.dist_iso), rownames(P.dist_iso))
-intersect_samples_col_iso <- intersect(colnames(H.dist_iso), colnames(P.dist_iso)) # The host data set had 189, and the symbioant had 186
+intersect_samples_col_iso <- intersect(colnames(H.dist_iso), colnames(P.dist_iso)) # The host data set had 189, and the symbiont had 186
 P.dist_intersect_iso <- P.dist_iso[intersect_samples_row_iso, intersect_samples_col_iso]
 H.dist_intersect_iso <- H.dist_iso[intersect_samples_row_iso, intersect_samples_col_iso ]
 
@@ -885,10 +886,10 @@ procrust.iso
 
 ## 3.2 Montipora
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/ind_coords_monti.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/ind_coords_monti.RData")
 monti_seqs_host <- ind_coords_monti %>% 
   mutate("sample_name" = VialID)
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/all_data_monti.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/all_data_monti.RData")
 seq_data_monti <- all_data_monti %>% 
   filter(!str_detect(name, "non")) %>% 
   filter(!str_detect(name, "p_"))
@@ -899,7 +900,7 @@ shared_seqs_monti <- inner_join(monti_seqs_host, seq_data_monti, by = "sample_na
 seq_data_monti %>% 
   distinct(sample_name) %>% 
   nrow()
- #should be 187 in the symbioant
+ #should be 187 in the symbiont
 
 shared_seqs_monti <- shared_seqs_monti %>% 
   select(sample_name)
@@ -908,7 +909,7 @@ shared_seqs_monti <- shared_seqs_monti %>%
 ### 3.2.1 Host tree
 *note the step for calculating the host_shared_dist_matrix - this is the line we may need to change to get the procrustes looking a bit less like a straight line*
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/monti_gen.RData") #load host data
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/monti_gen.RData") #load host data
 
 
 library(adegenet) #install required package
@@ -930,38 +931,38 @@ host_shared_dist_monti <- dist(monti_gen_subset, method = "euclidean") #calculat
 # convert the distance matrix to a dist object
 host_dist_matrix_monti <- as.dist(host_shared_dist_monti)
 
-#Create a matrix with only common sample names for symbioant
-seqs_wide_symbioant <- seq_data_monti %>%
+#Create a matrix with only common sample names for symbiont
+seqs_wide_symbiont <- seq_data_monti %>%
   select(sample_name, name, value) %>%
   filter(sample_name %in% shared_seqs_monti$sample_name) %>% 
   pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
   tibble::column_to_rownames(var = "sample_name") #187 samples
 
-#k_tree_monti_symbioant <- kdist_monti_symbioant %>% phangorn::upgma()
+#k_tree_monti_symbiont <- kdist_monti_symbiont %>% phangorn::upgma()
 
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_monti_symbioant.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/kdist_monti_symbiont.RData")
 # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
-du_monti_symbioant <- k_unidist_monti[, , "d_0.5"]   
-dist_monti_symbioant <- as.dist(du_monti_symbioant, diag = FALSE)
+du_monti_symbiont <- k_unidist_monti[, , "d_0.5"]   
+dist_monti_symbiont <- as.dist(du_monti_symbiont, diag = FALSE)
 
 ```
 
-### 3.2.2 Symbioant Tree 
+### 3.2.2 Symbiont Tree 
 
 ```{r}
 #convert host (H) and symbiont (P) distance trees as data matrices
 H.dist_monti <- host_dist_matrix_monti %>% as.matrix()
-P.dist_monti <- dist_monti_symbioant %>% as.matrix() 
+P.dist_monti <- dist_monti_symbiont %>% as.matrix() 
 ```
 
 ```{r}
 #must have same number of dimensions 
 dim(H.dist_monti)
-dim(P.dist_monti) #its really odd that the symbioant has 186 when the code running above has 187 sample names
+dim(P.dist_monti) #its really odd that the symbiont has 186 when the code running above has 187 sample names
 
 # Subset to only the samples that are in both datasets
 intersect_samples_row_monti <- intersect(rownames(H.dist_monti), rownames(P.dist_monti))
-intersect_samples_col_monti <- intersect(colnames(H.dist_monti), colnames(P.dist_monti)) # The host data set had 189, and the symbioant had 186
+intersect_samples_col_monti <- intersect(colnames(H.dist_monti), colnames(P.dist_monti)) # The host data set had 189, and the symbiont had 186
 P.dist_intersect_monti <- P.dist_monti[intersect_samples_row_monti, intersect_samples_col_monti]
 H.dist_intersect_monti <- H.dist_monti[intersect_samples_row_monti, intersect_samples_col_monti ]
 
@@ -1034,8 +1035,8 @@ save(procrust.monti, file = "procrust.monti.RData")
 ```
 ## 3.3 Acropora
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/all_data_acro.RData")
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/ind_coords_acro.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/all_data_acro.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/ind_coords_acro.RData")
 
 ind_coords_acro <- ind_coords
 acro_seqs_host <- ind_coords_acro %>% 
@@ -1052,7 +1053,7 @@ shared_seqs_acro <- inner_join(acro_seqs_host, seq_data_acro, by = "sample_name"
 seq_data_acro %>% 
   distinct(sample_name) %>% 
   nrow()
- #should be 354 in the symbioant
+ #should be 354 in the symbiont
 
 shared_seqs_acro <- shared_seqs_acro %>% 
   select(sample_name)
@@ -1061,8 +1062,8 @@ shared_seqs_acro <- shared_seqs_acro %>%
 ### 3.3.1 Host tree
 
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/acro_gen.RData") #load host data
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/all_data_acro.RData") #load symbioant data
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/acro_gen.RData") #load host data
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/all_data_acro.RData") #load symbiont data
 seq_data_acro <- all_data_acro %>% 
   filter(!str_detect(name, "non")) %>% 
   filter(!str_detect(name, "p_"))
@@ -1086,43 +1087,43 @@ host_shared_dist_acro <- dist(acro_gen_subset, method = "euclidean") #calculate 
 # convert the distance matrix to a dist object
 host_dist_matrix_acro <- as.dist(host_shared_dist_acro)
 
-#Create a matrix with only common sample names for symbioant
-seqs_wide_symbioant_acro <- seq_data_acro %>%
+#Create a matrix with only common sample names for symbiont
+seqs_wide_symbiont_acro <- seq_data_acro %>%
   select(sample_name, name, value) %>%
   filter(sample_name %in% shared_seqs_acro$sample_name) %>% 
   pivot_wider(names_from = name, values_from = value, values_fill = 0) %>%
   tibble::column_to_rownames(var = "sample_name") #379 samples
 
-load("~/AIMS@JCU/CoralSeaSymbioants/Coral-Sea-Cophylogeny-2025/kdist_acro_symbioant.RData")
-#k_tree_acro_symbioant <- kdist_acro_symbioant %>% phangorn::upgma()
+load("~/AIMS@JCU/CoralSeaSymbionts/Coral-Sea-Cophylogeny-2025/kdist_acro_symbiont.RData")
+#k_tree_acro_symbiont <- kdist_acro_symbiont %>% phangorn::upgma()
 
 
 
-k_unidist_symbioant_acro <- GUniFrac(seqs_wide_symbioant_acro, k_tree_acro_symbioant)   #GUniFrac calculates all the distances 
-k_unidist_symbioant_acro <- k_unidist_symbioant_acro$unifracs
+k_unidist_symbiont_acro <- GUniFrac(seqs_wide_symbiont_acro, k_tree_acro_symbiont)   #GUniFrac calculates all the distances 
+k_unidist_symbiont_acro <- k_unidist_symbiont_acro$unifracs
 
 
  # GUniFrac with alpha 0.5 (i.e Generalised UniFrac Distance)
-du_acro_symbioant <- k_unidist_symbioant_acro[, , "d_0.5"]   
-dist_acro_symbioant <- as.dist(du_acro_symbioant, diag = FALSE)
+du_acro_symbiont <- k_unidist_symbiont_acro[, , "d_0.5"]   
+dist_acro_symbiont <- as.dist(du_acro_symbiont, diag = FALSE)
 ```
 
-### 3.3.2 Symbioant Tree 
+### 3.3.2 Symbiont Tree 
 
 ```{r}
 #convert host (H) and symbiont (P) distance trees as data matrices
 H.dist_acro <- host_dist_matrix_acro %>% as.matrix()
-P.dist_acro <- dist_acro_symbioant %>% as.matrix() 
+P.dist_acro <- dist_acro_symbiont %>% as.matrix() 
 ```
 
 ```{r}
 #must have same number of dimensions 
 dim(H.dist_acro)
-dim(P.dist_acro) #its really odd that the symbioant has 186 when the code running above has 187 sample names
+dim(P.dist_acro) #its really odd that the symbiont has 186 when the code running above has 187 sample names
 
 # Subset to only the samples that are in both datasets
 intersect_samples_row_acro <- intersect(rownames(H.dist_acro), rownames(P.dist_acro))
-intersect_samples_col_acro <- intersect(colnames(H.dist_acro), colnames(P.dist_acro)) # The host data set had 189, and the symbioant had 186
+intersect_samples_col_acro <- intersect(colnames(H.dist_acro), colnames(P.dist_acro)) # The host data set had 189, and the symbiont had 186
 P.dist_intersect_acro <- P.dist_acro[intersect_samples_row_acro, intersect_samples_col_acro]
 H.dist_intersect_acro <- H.dist_acro[intersect_samples_row_acro, intersect_samples_col_acro ]
 
