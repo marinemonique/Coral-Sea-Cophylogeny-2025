@@ -18,7 +18,7 @@ library(tidyverse)
 ## Import and filter Host data
 ```{r}
 library(tidyverse)
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_Isopora_CS_2024/Isopora/ind_coords_iso.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/ITS2_Isopora_CS_2024/Isopora/ind_coords_iso.RData")
 
 Cluster_Isopora_H <- ind_coords_iso %>%
   mutate(cluster = case_when(
@@ -27,18 +27,18 @@ Cluster_Isopora_H <- ind_coords_iso %>%
     Axis1 > 0 & Axis2 < 0 ~ "IC3",
     TRUE ~ NA_character_  # Everything else gets NA
   )) %>% 
-  rename("sample_name" = SampleID) #rename column to be able to join with Symbioant data
+  rename("sample_name" = SampleID) #rename column to be able to join with Symbiont data
 
 ```
 
-## Symbioant data
+## Symbiont data
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2_Isopora_CS_2024/symbioant_iso_all.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/ITS2_Isopora_CS_2024/symbiont_iso_all.RData")
 ```
 
 ### Subset Isopora based on host clustering
 ```{r}
-Isopora_combined <- left_join(x = symbioant_iso_all, y= Cluster_Isopora_H, by = "sample_name")
+Isopora_combined <- left_join(x = symbiont_iso_all, y= Cluster_Isopora_H, by = "sample_name")
 ```
 
 ## Combine Host and Sybioant
@@ -65,7 +65,7 @@ Isopora_combined %>%
 ## Import and filter Host data
 ```{r}
 library(tidyverse)
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/ind_coords_monti.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/ITS2 Montipora/Montipora_CS_Analysis/ind_coords_monti.RData")
 
 Cluster_Montipora_H <- ind_coords_monti %>% 
   mutate(cluster = case_when(
@@ -79,14 +79,14 @@ Cluster_Montipora_H <- ind_coords_monti %>%
   
 ```
 
-## Symbioant data
+## Symbiont data
 ```{r}
-load("~/AIMS@JCU/CoralSeaSymbioants/ITS2 Montipora/Montipora_CS_Analysis/symbioant_monti_all.RData")
+load("~/AIMS@JCU/CoralSeaSymbionts/ITS2 Montipora/Montipora_CS_Analysis/symbiont_monti_all.RData")
 ```
 
 ## Combine Host and Sybioant
 ```{r}
-Montipora_combined <- left_join(x = symbioant_monti_all, y= Cluster_Montipora_H, by = "sample_name")
+Montipora_combined <- left_join(x = symbiont_monti_all, y= Cluster_Montipora_H, by = "sample_name")
 ```
 
 ## Type Profiles 
@@ -108,4 +108,5 @@ Montipora_combined %>%
 
 ```
 
+#Acropora
 
